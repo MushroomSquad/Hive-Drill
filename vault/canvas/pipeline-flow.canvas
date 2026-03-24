@@ -1,0 +1,180 @@
+{
+  "nodes": [
+    {
+      "id": "stage-0",
+      "type": "text",
+      "text": "## Stage 0\n### 📝 Brief\n\nHuman заполняет brief.\n\n`just new TASK-ID`\n\n*Файл: `00-inbox/TASK-ID.md`*",
+      "x": 0,
+      "y": 100,
+      "width": 200,
+      "height": 180,
+      "color": "6"
+    },
+    {
+      "id": "stage-1",
+      "type": "text",
+      "text": "## Stage 1\n### 🧠 Plan\n**Agent: Claude**\n\nАнализирует brief,\nстроит plan.md\n\n*Артефакт: `plan.md`*",
+      "x": 260,
+      "y": 100,
+      "width": 200,
+      "height": 180,
+      "color": "3"
+    },
+    {
+      "id": "gate-1",
+      "type": "text",
+      "text": "## ⏸ Gate 1\n### Human Review\n\nПоказывает plan.md\n\n`y` / `n` / `e`",
+      "x": 520,
+      "y": 130,
+      "width": 160,
+      "height": 120,
+      "color": "4"
+    },
+    {
+      "id": "stage-2",
+      "type": "text",
+      "text": "## Stage 2\n### 📋 Tasks\n**Agent: Claude**\n\nДелит план на\nконкретные задачи\n\n*Артефакт: `tasks.md`*",
+      "x": 740,
+      "y": 100,
+      "width": 200,
+      "height": 180,
+      "color": "3"
+    },
+    {
+      "id": "stage-3",
+      "type": "text",
+      "text": "## Stage 3\n### 💻 Code\n**Agent: Codex**\n\nПишет код по задачам\n\n*Артефакт: git diff,\nworktree*",
+      "x": 1000,
+      "y": 100,
+      "width": 200,
+      "height": 180,
+      "color": "1"
+    },
+    {
+      "id": "stage-4",
+      "type": "text",
+      "text": "## Stage 4\n### 🧪 Tests\n**Scripts**\n\nЗапускает тесты,\nлинтер, type check\n\n*Артефакт: `test-report.md`*",
+      "x": 1260,
+      "y": 100,
+      "width": 200,
+      "height": 180,
+      "color": "1"
+    },
+    {
+      "id": "stage-5",
+      "type": "text",
+      "text": "## Stage 5\n### 👁 Review\n**Agent: Claude**\n\nКод-ревью diff,\nfindings.md\n\n*Артефакт: `findings.md`*",
+      "x": 1520,
+      "y": 100,
+      "width": 200,
+      "height": 180,
+      "color": "3"
+    },
+    {
+      "id": "gate-2",
+      "type": "text",
+      "text": "## ⏸ Gate 2\n### Human Review\n\nПоказывает findings.md\n\n`y` / `n` / `e`",
+      "x": 1780,
+      "y": 130,
+      "width": 160,
+      "height": 120,
+      "color": "4"
+    },
+    {
+      "id": "stage-6",
+      "type": "text",
+      "text": "## Stage 6\n### 🚀 PR\n**Scripts**\n\nПакует PR,\nпушит ветку\n\n*Артефакт: GitHub PR*",
+      "x": 2000,
+      "y": 100,
+      "width": 200,
+      "height": 180,
+      "color": "5"
+    },
+    {
+      "id": "label-auto",
+      "type": "text",
+      "text": "⚡ Автоматически",
+      "x": 0,
+      "y": 320,
+      "width": 160,
+      "height": 40,
+      "color": "5"
+    },
+    {
+      "id": "label-gate",
+      "type": "text",
+      "text": "⏸ Human gate",
+      "x": 520,
+      "y": 320,
+      "width": 160,
+      "height": 40,
+      "color": "4"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0-1",
+      "fromNode": "stage-0",
+      "fromSide": "right",
+      "toNode": "stage-1",
+      "toSide": "left",
+      "label": "brief ready"
+    },
+    {
+      "id": "e1-g1",
+      "fromNode": "stage-1",
+      "fromSide": "right",
+      "toNode": "gate-1",
+      "toSide": "left",
+      "label": "plan.md"
+    },
+    {
+      "id": "eg1-2",
+      "fromNode": "gate-1",
+      "fromSide": "right",
+      "toNode": "stage-2",
+      "toSide": "left",
+      "label": "approved"
+    },
+    {
+      "id": "e2-3",
+      "fromNode": "stage-2",
+      "fromSide": "right",
+      "toNode": "stage-3",
+      "toSide": "left",
+      "label": "tasks.md"
+    },
+    {
+      "id": "e3-4",
+      "fromNode": "stage-3",
+      "fromSide": "right",
+      "toNode": "stage-4",
+      "toSide": "left",
+      "label": "code diff"
+    },
+    {
+      "id": "e4-5",
+      "fromNode": "stage-4",
+      "fromSide": "right",
+      "toNode": "stage-5",
+      "toSide": "left",
+      "label": "tests pass"
+    },
+    {
+      "id": "e5-g2",
+      "fromNode": "stage-5",
+      "fromSide": "right",
+      "toNode": "gate-2",
+      "toSide": "left",
+      "label": "findings.md"
+    },
+    {
+      "id": "eg2-6",
+      "fromNode": "gate-2",
+      "fromSide": "right",
+      "toNode": "stage-6",
+      "toSide": "left",
+      "label": "approved"
+    }
+  ]
+}

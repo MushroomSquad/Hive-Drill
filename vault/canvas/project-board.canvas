@@ -1,0 +1,105 @@
+{
+  "nodes": [
+    {
+      "id": "lane-backlog",
+      "type": "text",
+      "text": "## 📥 Backlog\n\nНовые задачи ожидают обработки.\n\n`just new TASK-ID`",
+      "x": 0,
+      "y": 0,
+      "width": 240,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "lane-planning",
+      "type": "text",
+      "text": "## 🔍 Planning\n\nClaude строит план.\n\nГейт: Human approve plan.",
+      "x": 280,
+      "y": 0,
+      "width": 240,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "lane-inprogress",
+      "type": "text",
+      "text": "## ⚙️ In Progress\n\nCodex пишет код.\nСкрипты запускают тесты.",
+      "x": 560,
+      "y": 0,
+      "width": 240,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "lane-review",
+      "type": "text",
+      "text": "## 👁 Review\n\nClaude ревьюит код.\n\nГейт: Human approve findings.",
+      "x": 840,
+      "y": 0,
+      "width": 240,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "lane-done",
+      "type": "text",
+      "text": "## ✅ Done\n\nPR создан и смержен.\n\nАртефакты в `02-done/`.",
+      "x": 1120,
+      "y": 0,
+      "width": 240,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "card-example-1",
+      "type": "text",
+      "text": "**FEAT-001**\np1 · feature\nДобавить OAuth login",
+      "x": 20,
+      "y": 440,
+      "width": 200,
+      "height": 80,
+      "color": "6"
+    },
+    {
+      "id": "card-example-2",
+      "type": "text",
+      "text": "**BUG-003**\np0 · bugfix\nФикс краша при logout",
+      "x": 300,
+      "y": 440,
+      "width": 200,
+      "height": 80,
+      "color": "3"
+    },
+    {
+      "id": "card-example-3",
+      "type": "text",
+      "text": "**REFACTOR-007**\np2 · refactor\nВынести auth в модуль",
+      "x": 580,
+      "y": 440,
+      "width": 200,
+      "height": 80,
+      "color": "1"
+    },
+    {
+      "id": "card-example-4",
+      "type": "text",
+      "text": "**FEAT-002**\np1 · feature\nAPI rate limiting",
+      "x": 860,
+      "y": 440,
+      "width": 200,
+      "height": 80,
+      "color": "4"
+    },
+    {
+      "id": "card-example-5",
+      "type": "text",
+      "text": "**BUG-001**\np1 · bugfix\nФикс XSS в комментах",
+      "x": 1140,
+      "y": 440,
+      "width": 200,
+      "height": 80,
+      "color": "5"
+    }
+  ],
+  "edges": []
+}
