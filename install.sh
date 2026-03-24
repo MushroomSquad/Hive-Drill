@@ -220,7 +220,7 @@ else
   if [[ -f .env.example ]]; then
     cp .env.example .env
     ok ".env создан из .env.example"
-    warn "Заполни API ключи в .env !"
+    warn "Добавь GITHUB_TOKEN в .env (нужен для MCP)"
   fi
 fi
 
@@ -293,24 +293,47 @@ else
   fi
 fi
 
-# ─── 7. Ключи ─────────────────────────────────────────────────────────────────
-section "API ключи"
+# ─── 7. Авторизация агентов ───────────────────────────────────────────────────
+section "Авторизация агентов"
 
-check_key() {
-  local var="$1" label="$2" url="$3"
-  local val=""
-  val=$(grep -E "^${var}=.+" .env 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" || true)
-  val="${val:-${!var:-}}"
-  if [[ -n "$val" && "$val" != "sk-ant-..." && "$val" != "sk-..." && "$val" != "ghp_..." ]]; then
-    ok "${label}: задан"
+# Claude Code — авторизуется через свой auth, не через .env
+if command -v claude &>/dev/null; then
+  if claude auth status &>/dev/null 2>&1; then
+    ok "Claude Code: авторизован"
   else
-    nudge "${label} — добавь в .env: ${var}=...  (${url})"
+    info "Авторизуй Claude Code:"
+    echo ""
+    echo -e "     ${CYAN}claude auth login${RESET}"
+    echo ""
+    nudge "claude auth login — нужно для работы агента"
+  fi
+fi
+
+# Codex — авторизуется через свой auth, не через .env
+if command -v codex &>/dev/null; then
+  if codex auth status &>/dev/null 2>&1; then
+    ok "Codex: авторизован"
+  else
+    info "Авторизуй Codex:"
+    echo ""
+    echo -e "     ${CYAN}codex auth login${RESET}"
+    echo ""
+    nudge "codex auth login — нужно для работы агента"
+  fi
+fi
+
+# GitHub token — нужен только MCP-серверу
+check_github_token() {
+  local val=""
+  val=$(grep -E "^GITHUB_TOKEN=.+" .env 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" || true)
+  val="${val:-${GITHUB_TOKEN:-}}"
+  if [[ -n "$val" && "$val" != "ghp_..." ]]; then
+    ok "GITHUB_TOKEN: задан (для MCP)"
+  else
+    nudge "GITHUB_TOKEN — добавь в .env для MCP-сервера GitHub: https://github.com/settings/tokens (scope: repo)"
   fi
 }
-
-check_key "ANTHROPIC_API_KEY" "Anthropic (Claude)" "https://console.anthropic.com/keys"
-check_key "OPENAI_API_KEY"    "OpenAI (Codex)"     "https://platform.openai.com/api-keys"
-check_key "GITHUB_TOKEN"      "GitHub (MCP)"       "https://github.com/settings/tokens"
+check_github_token
 
 # ─── Итог ─────────────────────────────────────────────────────────────────────
 echo ""
@@ -346,8 +369,9 @@ echo ""
 echo -e "  ${BOLD}1. Открой vault в Obsidian:${RESET}"
 echo -e "     ${DIM}File → Open Vault → $(pwd)/vault${RESET}"
 echo ""
-echo -e "  ${BOLD}2. Заполни API ключи:${RESET}"
-echo -e "     ${DIM}\$EDITOR .env${RESET}"
+echo -e "  ${BOLD}2. Авторизуй агентов (один раз):${RESET}"
+echo -e "     ${CYAN}claude auth login${RESET}"
+echo -e "     ${CYAN}codex auth login${RESET}"
 echo ""
 echo -e "  ${BOLD}3. Создай первую задачу:${RESET}"
 echo -e "     ${CYAN}just new FEAT-001${RESET}"
