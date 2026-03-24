@@ -1,75 +1,127 @@
-# Local LLM Stack for Cursor IDE
+# AI Dev OS
 
-Локальный стек для запуска LLM с OpenAI-compatible API и подключения к Cursor/любому IDE-агенту.
+Производственная система разработки с AI: Cursor + Warp + Codex + Claude Code + локальный LLM стек.
 
-## Железо / Целевое окружение
+Не набор инструментов, а **фабрика повторяемой разработки** с blueprint-пайплайнами, роутингом задач по приоритету и постоянной памятью проекта.
 
-| Компонент | Значение |
-|-----------|----------|
-| GPU | RTX 4070 (12 GB VRAM) |
-| RAM | 49 GB |
-| CPU | Ryzen 5600X |
-| OS | Linux / WSL2 |
+---
 
-## Архитектура
+## Архитектура системы
 
 ```
-Cursor / IDE
-  └─> публичный HTTPS-туннель (cloudflared / ngrok)
-        └─> Harbor (оркестратор)
-              ├─> TabbyAPI + ExLlamaV2  ← основной стек (быстрый)
-              ├─> llama.cpp + GGUF      ← резервный стек (надёжный)
-              └─> AirLLM               ← тяжёлые модели (>VRAM)
+┌─────────────────────────────────────────────────────────────┐
+│  UI-слой          Cursor (редактор, ревью, ручная коррекция) │
+├─────────────────────────────────────────────────────────────┤
+│  Orchestration    Warp / Oz (терминал, pipeline runner, CI)  │
+├─────────────────────────────────────────────────────────────┤
+│  Агенты           Claude Code (архитект) │ Codex (исполнитель)│
+├─────────────────────────────────────────────────────────────┤
+│  Tool-bus         MCP (GitHub, Linear, Postgres, Browser...) │
+├─────────────────────────────────────────────────────────────┤
+│  Blueprints       .ai/ (пайплайны, скиллы, память, ранзы)   │
+├─────────────────────────────────────────────────────────────┤
+│  Local LLM        llm/ (Harbor + TabbyAPI + llama.cpp)       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Стеки
+## Роли агентов
 
-### Основной — Harbor + TabbyAPI + EXL2 (рекомендуется)
-- Максимальная скорость на consumer GPU
-- OpenAI-compatible API из коробки
-- Endpoint: `http://localhost:33931/v1`
+| Агент | Роль | Приоритеты |
+|-------|------|-----------|
+| **Claude Code** | Архитектор, длинный мыслитель | P0: critical, P1: plan+review |
+| **Codex** | Исполнитель, быстрый инженер | P1: implementation, P2: routine |
+| **Cursor** | Кабина пилота, ревью, ручная коррекция | все |
+| **Warp/Oz** | Диспетчерская, pipeline runner | all automation |
+| **Local LLM** | Локальный backend для P2/P3 задач | P2: routine, P3: background |
 
-### Резервный — Harbor + llama.cpp + GGUF
-- Надёжнее, router mode для нескольких моделей
-- Flash Attention, prefix cache, speculative decoding
-- Endpoint: `http://localhost:33831/v1`
+## Маршрутизация задач
 
-### Тяжёлый — Harbor + AirLLM
-- Для моделей, которые не влезают в VRAM
-- Layer-wise загрузка, 4-bit/8-bit compression
-- Endpoint: `http://localhost` (порт по конфигу Harbor)
+| Приоритет | Тип задачи | Агент | Модель |
+|-----------|-----------|-------|--------|
+| **P0** critical | security, migration, architecture | Claude Code | opus/opusplan |
+| **P1** standard | feature, refactor, integration | Claude Sonnet + Codex cloud | cloud-medium |
+| **P2** routine | boilerplate, docs, simple tests | Codex local | local-fast |
+| **P3** background | triage, changelogs, search | Codex local | local-cheap |
 
-## Рекомендуемые модели
+## Структура проекта
 
-| Назначение | Модель | Квант | VRAM |
-|------------|--------|-------|------|
-| Кодинг (daily) | Qwen2.5-Coder-7B-Instruct-exl2 | 6_5 | ~8.6 GB @ 16k |
-| ТЗ / доки / архитектура | Qwen2.5-14B-Instruct-exl2 | 4_25 | ~10.1 GB @ 4k |
-| Быстрый резерв | Meta-Llama-3.1-8B-Instruct-exl2 | 6_5 | ~8 GB |
-| Тяжёлый (по запросу) | Qwen2.5-Coder-32B-Instruct-exl2 | 4_0 | >12 GB → AirLLM |
+```
+.ai/
+  base/          — канон: правила, архитектура, критерии done
+  blueprints/    — шаблоны пайплайнов (feature, bugfix, refactor...)
+  skills/        — переиспользуемые micro-workflow
+  pipelines/     — YAML-пайплайны для Oz/CI
+  routing/       — policy маршрутизации задач
+  runs/          — артефакты каждого прогона
+  evals/         — золотые тесты для blueprint'ов
+.codex/          — config.toml (cloud + local профили)
+.cursor/rules/   — editor-specific правила
+.claude/         — settings, skills Claude Code
+mcp/             — конфигурация MCP серверов
+scripts/         — ai-check, blueprint-run, plan-init, package-pr
+llm/             — локальный LLM стек (Harbor + TabbyAPI + llama.cpp)
+```
 
 ## Быстрый старт
 
+### 1. Инициализация системы
+
 ```bash
-# 1. Установить Harbor
-./setup/install.sh
-
-# 2. Проверить зависимости
-./setup/check.sh
-
-# 3. Скачать основную модель (кодер)
-./models/download-coder.sh
-
-# 4. Поднять стек
-./profiles/tabbyapi-coder.sh
-
-# 5. Проверить endpoint
-curl http://localhost:33931/v1/models
+./scripts/init.sh
 ```
 
-Подробнее:
-- [Установка](setup/install.sh)
-- [Скачивание моделей](models/)
-- [Профили запуска](profiles/)
-- [Системные промпты](prompts/)
-- [Подключение к Cursor](cursor/SETUP.md)
+Скрипт: проверит зависимости, скопирует `.env.example` → `.env`, настроит MCP, проверит локальный LLM стек.
+
+### 2. Запустить локальный LLM
+
+```bash
+just llm-up              # TabbyAPI + кодер 7B
+# или
+./llm/setup/install.sh   # первая установка
+```
+
+### 3. Запустить blueprint-пайплайн
+
+```bash
+# Новая фича
+just bp feature TASK-123
+
+# Баг-фикс
+just bp bugfix BUG-456
+
+# Code review
+just bp review PR-789
+```
+
+### 4. Проверить статус
+
+```bash
+just status              # все агенты и сервисы
+./scripts/ai-check.sh    # валидация проекта
+```
+
+## Жизненный цикл pipeline
+
+```
+Intake (brief.md)
+  → Architectural pass — Claude Code (plan.md)
+    → Task slicing — Claude / Cursor (tasks.yaml)
+      → Isolated execution — Codex в worktree (код)
+        → Verification — scripts/ai-check.sh (verification.md)
+          → Narrative review — Claude Code (findings.md)
+            → PR packaging — Codex/Cursor (pr-body.md)
+              → Retro → обновление BASE.md / blueprints
+```
+
+## Локальный LLM
+
+Подробнее: [llm/README.md](llm/README.md)
+
+RTX 4070 (12 GB VRAM) — рекомендуемый стек: Harbor + TabbyAPI + EXL2.
+
+```bash
+cd llm
+./setup/install.sh
+./models/download-coder.sh
+./profiles/tabbyapi-coder.sh
+```

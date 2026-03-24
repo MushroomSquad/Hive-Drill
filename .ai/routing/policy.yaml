@@ -1,0 +1,120 @@
+# Model Routing Policy
+# Определяет, какой агент и какая модель обрабатывает задачу по приоритету.
+# Используется scripts/blueprint-run.sh и justfile.
+#
+# Роутинг не автоматический — это policy-документ для агентов и скриптов.
+# Агент обязан прочитать этот файл и следовать routing rules.
+
+version: "1"
+
+lanes:
+  cloud:
+    description: "Облачные модели — для критичных и сложных задач"
+    providers:
+      claude_opus:
+        tool: claude-code
+        flags: "--model opus"
+        use_for: [planning, architecture, security, P0]
+      claude_opusplan:
+        tool: claude-code
+        flags: "--model opus --plan-mode"
+        use_for: [P0_complex, large_refactor, cross_module_change]
+      claude_sonnet:
+        tool: claude-code
+        flags: "--model sonnet"
+        use_for: [P1_review, narrative_review, findings]
+      codex_cloud_high:
+        tool: codex
+        profile: cloud-high
+        use_for: [P0_execution, complex_implementation]
+      codex_cloud_medium:
+        tool: codex
+        profile: cloud-medium
+        use_for: [P1_feature, P1_refactor, P1_integration]
+
+  local:
+    description: "Локальные модели — для рутины и фонового задач"
+    providers:
+      codex_local_fast:
+        tool: codex
+        profile: local-fast
+        base_url: "http://localhost:8000/v1"
+        use_for: [P2_boilerplate, P2_docs, P2_simple_tests, P2_rename]
+        escalation:
+          on: [low_confidence, tool_error, large_diff]
+          to: codex_cloud_medium
+      codex_local_cheap:
+        tool: codex
+        profile: local-cheap
+        base_url: "http://localhost:8000/v1"
+        use_for: [P3_triage, P3_search, P3_changelog_draft]
+        escalation:
+          on: [low_confidence]
+          to: claude_haiku
+
+routing:
+  p0_critical:
+    description: "Критично и рискованно — только облако"
+    match:
+      keywords: [security, migration, architecture, unclear_root_cause, cross_repo]
+      task_types: [security_fix, schema_migration, auth_change, data_migration]
+    run:
+      planner: claude_opusplan
+      executor: codex_cloud_high
+      reviewer: claude_opus
+      fallback: human_review_required
+    require_human_approval: true
+
+  p1_standard:
+    description: "Обычные задачи разработки"
+    match:
+      keywords: [feature, refactor, integration, medium_test]
+      task_types: [feature, refactor, integration, test_suite]
+    run:
+      planner: claude_sonnet
+      executor: codex_cloud_medium
+      reviewer: cursor_auto
+    require_human_approval: false
+
+  p2_routine:
+    description: "Дешёвая рутина — prefer local"
+    match:
+      keywords: [boilerplate, docs, rename, simple_test, log, format]
+      task_types: [boilerplate, documentation, rename, simple_fix]
+    run:
+      planner: codex_local_fast
+      executor: codex_local_fast
+      reviewer: none
+      escalation_on: [low_confidence, tool_error, large_diff]
+      escalate_to: codex_cloud_medium
+    require_human_approval: false
+
+  p3_background:
+    description: "Фоновая механика — всегда local"
+    match:
+      keywords: [triage, search, changelog, comment, summarize, classify]
+      task_types: [issue_triage, file_search, changelog_draft, comment_gen]
+    run:
+      executor: codex_local_cheap
+      escalate_to: claude_haiku
+    require_human_approval: false
+
+escalation_rules:
+  low_confidence:
+    description: "Модель не уверена (confidence score < threshold)"
+    threshold: 0.7
+    action: escalate_to_next_lane
+
+  large_diff:
+    description: "Неожиданно большой diff"
+    threshold_lines: 300
+    action: stop_and_report
+
+  tool_error:
+    description: "Ошибка инструмента или внешнего вызова"
+    max_retries: 2
+    action: escalate_to_next_lane
+
+  p0_trigger:
+    description: "Обнаружена P0 проблема в ходе P1/P2 задачи"
+    action: stop_create_findings_escalate_human

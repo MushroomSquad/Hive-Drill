@@ -1,0 +1,54 @@
+{
+  "model": "claude-sonnet-4-6",
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/ai-check.sh*)",
+      "Bash(./scripts/worktree.sh*)",
+      "Bash(./scripts/plan-init.sh*)",
+      "Bash(./scripts/blueprint-run.sh*)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git worktree*)",
+      "Bash(git branch*)",
+      "Read(**)",
+      "Write(.ai/runs/**)",
+      "Write(CLAUDE.md)",
+      "Write(.ai/base/**)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(rm -rf*)",
+      "Bash(git commit --amend*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/ai-check.sh --quick 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Claude Code] Session ended. Check .ai/runs/ for artifacts.'"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-haiku-4-5-20251001"
+  }
+}

@@ -1,0 +1,79 @@
+# Pipeline: Bugfix
+# Запуск: just bp bugfix <BUG-ID>
+
+name: bugfix
+blueprint: bugfix-v1
+version: "1"
+
+stages:
+  - id: triage
+    name: "Stage 0: Triage"
+    owner: auto          # p0 → claude, p1/p2 → codex local
+    outputs: [brief.md]
+    routing_key: triage
+    instructions: |
+      Determine priority from issue/input.
+      If P0: use claude to triage.
+      If P1/P2: use codex local-fast.
+      Produce brief.md per bugfix-v1.md Stage 0.
+
+  - id: diagnose
+    name: "Stage 1: Diagnosis"
+    owner: claude
+    model: claude_sonnet
+    depends_on: [triage]
+    inputs: [brief.md]
+    outputs: [plan.md]
+    instructions: |
+      claude "
+      Read brief.md and the affected code.
+      Find root cause. Produce plan.md per bugfix-v1.md Stage 1.
+      "
+
+  - id: test_first
+    name: "Stage 2a: Write failing test"
+    owner: codex
+    model: auto
+    depends_on: [diagnose]
+    outputs: [failing_test]
+    worktree: "wt/<RUN_ID>-codex"
+    instructions: |
+      codex "Write a test that reproduces the bug. Verify it is RED."
+      ./scripts/ai-check.sh --tests-only  # must FAIL here
+
+  - id: fix
+    name: "Stage 2b: Apply fix"
+    owner: codex
+    model: auto
+    depends_on: [test_first]
+    outputs: [code_fix]
+    instructions: |
+      codex "Apply the minimal fix per plan.md. Verify the test is now GREEN."
+      ./scripts/ai-check.sh  # must PASS here
+
+  - id: verify
+    name: "Stage 3: Verification"
+    owner: scripts
+    depends_on: [fix]
+    outputs: [verification.md]
+    command: |
+      ./scripts/ai-check.sh 2>&1 | tee .ai/runs/<RUN_ID>/verification.md
+
+  - id: review
+    name: "Stage 4: Review"
+    owner: claude
+    model: claude_sonnet
+    depends_on: [verify]
+    outputs: [findings.md]
+
+  - id: package
+    name: "Stage 5: PR packaging"
+    owner: codex
+    depends_on: [review]
+    outputs: [pr-body.md]
+
+completion_criteria:
+  - failing_test was RED before fix (documented)
+  - all tests GREEN after fix
+  - verification.md all PASS
+  - findings.md has root_cause

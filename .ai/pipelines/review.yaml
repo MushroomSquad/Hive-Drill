@@ -1,0 +1,44 @@
+# Pipeline: Code Review
+# Запуск: just bp review <PR-ID>
+
+name: review
+blueprint: review-v1
+version: "1"
+
+stages:
+  - id: load
+    name: "Stage 0: Context loading"
+    owner: claude
+    model: claude_sonnet
+    outputs: [context_loaded]
+    instructions: |
+      claude "
+      Load PR context: description, diff, related brief.md/plan.md if exists.
+      Read .ai/base/BASE.md and .ai/base/architecture-map.md.
+      "
+
+  - id: checks
+    name: "Stage 1: Automated checks"
+    owner: scripts
+    depends_on: [load]
+    outputs: [check_results]
+    command: |
+      ./scripts/ai-check.sh 2>&1
+
+  - id: review
+    name: "Stage 2: Narrative review"
+    owner: claude
+    model: claude_sonnet
+    depends_on: [checks]
+    outputs: [findings.md]
+    instructions: |
+      claude "
+      Review the diff following review-v1.md Stage 2 checklist.
+      Produce findings.md with BLOCKER/SUGGESTION/NIT classification.
+      Include security_assessment and architecture_assessment sections.
+      Verdict: APPROVED | REQUEST CHANGES | NEEDS DISCUSSION
+      "
+
+completion_criteria:
+  - findings.md exists with verdict
+  - all BLOCKERs are documented

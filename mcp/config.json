@@ -1,0 +1,54 @@
+{
+  "_comment": "MCP servers configuration — подключать в Cursor, Codex, Claude Code и Warp одинаково",
+  "_docs": "https://modelcontextprotocol.io",
+
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "_use_for": "Issues, PRs, code search, commits"
+    },
+
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+      "_use_for": "Repo-aware file operations with path validation"
+    },
+
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      },
+      "_use_for": "DB schema inspection, read-only queries",
+      "_optional": true
+    },
+
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"],
+      "_use_for": "Browser automation, E2E testing, web research",
+      "_optional": true
+    },
+
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "linear-mcp-server"],
+      "env": {
+        "LINEAR_API_KEY": "${LINEAR_API_KEY}"
+      },
+      "_use_for": "Issue tracking, task context",
+      "_optional": true
+    },
+
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "_use_for": "Cross-session knowledge graph for agent context"
+    }
+  }
+}

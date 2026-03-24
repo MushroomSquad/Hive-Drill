@@ -1,0 +1,44 @@
+---
+description: "Agent workflow rules — when to delegate and how"
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Agent Workflow Rules
+
+## Blueprint selection
+When a user requests a task, identify the type and use the matching blueprint:
+
+| Request type | Blueprint | Start with |
+|-------------|-----------|-----------|
+| "add/implement/build" | feature-v1 | `just bp feature <ID>` |
+| "fix/bug/broken" | bugfix-v1 | `just bp bugfix <ID>` |
+| "refactor/clean/extract" | refactor-v1 | `just bp refactor <ID>` |
+| "review/check PR" | review-v1 | `just bp review <ID>` |
+| "release/deploy" | release-v1 | `just bp release <version>` |
+
+## Run initialization
+Before starting any blueprint execution:
+```
+./scripts/plan-init.sh <TASK-ID> <blueprint>
+```
+This creates `.ai/runs/<TASK-ID>/` with the right structure.
+
+## Priority assessment
+Before starting work, assign priority:
+
+- **P0**: Any mention of security, migration, data loss, unclear root cause → escalate to Claude
+- **P1**: Features, refactors with known scope → Claude plans, Codex executes
+- **P2**: Boilerplate, docs, simple tests → Codex local
+- **P3**: Triage, search, changelogs → Codex local cheap
+
+## Worktree rules
+- Never work directly on main branch for blueprint runs
+- Create worktree: `./scripts/worktree.sh create <TASK-ID>`
+- Clean up after merge: `./scripts/worktree.sh clean <TASK-ID>`
+
+## Verification gate
+`scripts/ai-check.sh` must pass before:
+- Marking any stage complete
+- Proposing PR
+- Merging worktree back

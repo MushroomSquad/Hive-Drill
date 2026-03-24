@@ -1,0 +1,100 @@
+# Pipeline: Feature
+# Запуск: just bp feature <TASK-ID>
+# или: ./scripts/blueprint-run.sh feature <TASK-ID>
+
+name: feature
+blueprint: feature-v1
+version: "1"
+
+stages:
+  - id: intake
+    name: "Stage 0: Intake"
+    owner: human
+    outputs: [brief.md]
+    skip_if_exists: true
+    instructions: |
+      Создай .ai/runs/<RUN_ID>/brief.md по шаблону из feature-v1.md Stage 0.
+
+  - id: arch
+    name: "Stage 1: Architectural pass"
+    owner: claude
+    model: claude_opusplan
+    depends_on: [intake]
+    inputs: [brief.md]
+    outputs: [plan.md]
+    instructions: |
+      claude --model opus "
+      Read .ai/runs/<RUN_ID>/brief.md and .ai/base/BASE.md.
+      Produce plan.md following the template in .ai/blueprints/feature-v1.md Stage 1.
+      Work in worktree wt/<RUN_ID>-claude.
+      "
+
+  - id: slice
+    name: "Stage 2: Task slicing"
+    owner: claude
+    model: claude_sonnet
+    depends_on: [arch]
+    inputs: [brief.md, plan.md]
+    outputs: [tasks.yaml]
+    instructions: |
+      claude "
+      Read plan.md and produce tasks.yaml following feature-v1.md Stage 2 schema.
+      Each task must have: id, title, owner, priority, model_lane, inputs, outputs.
+      "
+
+  - id: exec
+    name: "Stage 3: Execution"
+    owner: codex
+    model: auto          # определяется из tasks.yaml model_lane
+    depends_on: [slice]
+    inputs: [tasks.yaml]
+    outputs: [code_changes]
+    worktree: "wt/<RUN_ID>-codex"
+    instructions: |
+      ./scripts/worktree.sh create <RUN_ID>
+      # Execute each task from tasks.yaml
+      # After each task: ./scripts/ai-check.sh
+
+  - id: verify
+    name: "Stage 4: Verification"
+    owner: scripts
+    depends_on: [exec]
+    outputs: [verification.md]
+    command: |
+      ./scripts/ai-check.sh 2>&1 | tee .ai/runs/<RUN_ID>/verification.md
+
+  - id: review
+    name: "Stage 5: Narrative review"
+    owner: claude
+    model: claude_sonnet
+    depends_on: [verify]
+    inputs: [verification.md, plan.md]
+    outputs: [findings.md]
+    gate: verification_passed
+    instructions: |
+      claude "
+      Review the implementation diff and produce findings.md per feature-v1.md Stage 5.
+      "
+
+  - id: package
+    name: "Stage 6: PR packaging"
+    owner: codex
+    model: codex_cloud_medium
+    depends_on: [review]
+    inputs: [brief.md, findings.md]
+    outputs: [pr-body.md]
+    gate: findings_approved
+    instructions: |
+      codex "Produce pr-body.md per feature-v1.md Stage 6 template."
+
+  - id: retro
+    name: "Stage 7: Retro"
+    owner: human
+    depends_on: [package]
+    outputs: [retro.md]
+    optional: true
+
+completion_criteria:
+  - verification.md exists and all checks PASS
+  - findings.md verdict == APPROVED
+  - pr-body.md exists

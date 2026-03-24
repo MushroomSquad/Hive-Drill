@@ -1,0 +1,89 @@
+# Codex configuration
+# Документация: https://github.com/openai/codex
+
+[core]
+# Режим по умолчанию: conservative изменения
+default_mode = "conservative"
+
+# Инструкции агента (читает при запуске)
+instructions = "AGENTS.md"
+
+# Рабочая директория
+# working_dir = "."
+
+[model]
+# Модель по умолчанию (cloud)
+default = "o4-mini"
+
+# Модель для review
+review_model = "gpt-4.1"
+
+# Reasoning effort: low | medium | high | max
+reasoning_effort = "medium"
+
+# --- Профили (переключение через: codex --profile <name>) ---
+
+[profiles.cloud-high]
+model = "o3"
+reasoning_effort = "high"
+description = "P0 задачи: security, architecture, critical bugs"
+
+[profiles.cloud-medium]
+model = "o4-mini"
+reasoning_effort = "medium"
+description = "P1 задачи: features, refactors, integrations"
+
+[profiles.local-fast]
+model = "Qwen2.5-Coder-7B-Instruct-exl2"
+reasoning_effort = "low"
+description = "P2 задачи: boilerplate, docs, simple tests"
+
+[profiles.local-fast.model_provider]
+name = "local"
+base_url = "http://localhost:33931/v1"
+# Без аутентификации — локальный сервер
+# env_key = ""
+
+[profiles.local-cheap]
+model = "Qwen2.5-14B-Instruct-exl2"
+reasoning_effort = "low"
+description = "P3 задачи: triage, search, changelogs"
+
+[profiles.local-cheap.model_provider]
+name = "local"
+base_url = "http://localhost:33931/v1"
+
+# --- Sandbox / safety ---
+[sandbox]
+# Команды, которые Codex может выполнять без подтверждения
+allowed_commands = [
+  "npm test",
+  "npm run lint",
+  "npm run typecheck",
+  "npm run build",
+  "python -m pytest",
+  "python -m mypy",
+  "go test ./...",
+  "go vet ./...",
+  "make check",
+  "make test",
+  "./scripts/ai-check.sh",
+]
+
+# Команды, требующие подтверждения
+require_approval = [
+  "git push",
+  "git reset",
+  "rm -rf",
+  "docker",
+  "kubectl",
+  "psql",
+  "make deploy",
+]
+
+[history]
+persistence = "project"  # сохранять историю в .codex/
+
+[mcp]
+# MCP серверы (синхронизировать с mcp/config.json)
+# Добавляй сюда те же серверы что в Cursor и Claude Code

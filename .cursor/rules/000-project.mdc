@@ -1,0 +1,37 @@
+---
+description: "Core project rules for Cursor"
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Project Rules
+
+Read `.ai/base/BASE.md` for the full project canon.
+
+## My role (Cursor)
+I am the **UI layer**: navigation, diff-review, manual corrections, quick questions, and pipeline observation.
+
+For non-trivial tasks, delegate to the appropriate agent:
+- Architecture / planning → Claude Code
+- Implementation → Codex
+- Automation / pipeline runs → Warp/Oz
+
+## Coding conventions
+Follow what's in `.ai/base/BASE.md` coding standards section.
+When in doubt: match the existing code style, don't introduce new patterns.
+
+## Change discipline
+- Minimal diffs — change only what was asked
+- No unsolicited refactoring
+- No adding comments, docstrings, or type hints to untouched code
+- No backwards-compat hacks for removed code
+
+## Before proposing any non-trivial change
+1. Read the affected files first
+2. Check if there's an active run in `.ai/runs/` for this task
+3. If this looks like P0 (security, data, architecture) — say so explicitly
+
+## Artifacts
+If executing a task that produces output files:
+- Store them in `.ai/runs/<TASK-ID>/`
+- Follow naming conventions from the relevant blueprint
