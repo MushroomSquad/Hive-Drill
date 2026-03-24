@@ -166,6 +166,7 @@ stage_check_brief() {
         log_success "Moved brief to 01-active/"
     fi
 
+    "${SCRIPT_DIR}/canvas-move.sh" "${TASK_ID}" "planning" 2>/dev/null || true
     log_success "Brief ready."
 }
 
@@ -729,17 +730,26 @@ run_stage() {
 }
 
 run_stage 0 stage_check_brief
+# Brief найден → карточка уже в planning (двинута в stage_check_brief)
+
 run_stage 1 stage_plan
 [[ $FROM_STAGE -le 1 ]] && gate_plan
 copy_artifacts_to_vault
+
 run_stage 2 stage_tasks
 copy_artifacts_to_vault
+"${SCRIPT_DIR}/canvas-move.sh" "${TASK_ID}" "inprogress" 2>/dev/null || true
+
 run_stage 3 stage_code
 run_stage 4 stage_tests
 copy_artifacts_to_vault
+"${SCRIPT_DIR}/canvas-move.sh" "${TASK_ID}" "review" 2>/dev/null || true
+
 run_stage 5 stage_review
 [[ $FROM_STAGE -le 5 ]] && gate_review
 copy_artifacts_to_vault
+"${SCRIPT_DIR}/canvas-move.sh" "${TASK_ID}" "done" 2>/dev/null || true
+
 run_stage 6 stage_pr
 
 finalize

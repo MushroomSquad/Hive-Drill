@@ -86,6 +86,9 @@ echo -e "${GREEN}${BOLD}✓ Task created:${RESET} ${TARGET}"
 echo -e "  Run dir:  ${RUN_DIR}"
 echo ""
 
+# ─── Add card to canvas ───────────────────────────────────────────────────────
+"${SCRIPT_DIR}/canvas-add.sh" "${TASK_ID}" "feature" "p1" "" "backlog" 2>/dev/null || true
+
 # ─── Open in editor ───────────────────────────────────────────────────────────
 if [[ -n "${EDITOR:-}" ]]; then
     echo -e "${CYAN}Opening in \$EDITOR (${EDITOR})...${RESET}"
