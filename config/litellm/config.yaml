@@ -1,0 +1,55 @@
+# LiteLLM Proxy конфигурация
+# Используется если нужен единый роутер: локальная модель + облако
+# Документация: https://docs.litellm.ai/docs/proxy/configs
+
+model_list:
+  # Локальный кодер (TabbyAPI / ExLlamaV2)
+  - model_name: local-coder
+    litellm_params:
+      model: openai/Qwen2.5-Coder-7B-Instruct-exl2
+      api_base: http://tabbyapi:5000/v1
+      api_key: "none"
+
+  # Локальный писатель (TabbyAPI / ExLlamaV2)
+  - model_name: local-writer
+    litellm_params:
+      model: openai/Qwen2.5-14B-Instruct-exl2
+      api_base: http://tabbyapi:5000/v1
+      api_key: "none"
+
+  # Локальный llama.cpp (резервный)
+  - model_name: local-llamacpp
+    litellm_params:
+      model: openai/Qwen2.5-Coder-7B-Instruct-Q5_K_M
+      api_base: http://llamacpp:8080/v1
+      api_key: "none"
+
+  # Облако — OpenAI GPT-4o (сложные задачи)
+  - model_name: cloud-strong
+    litellm_params:
+      model: gpt-4o
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  # Облако — Anthropic Claude (альтернатива)
+  - model_name: cloud-claude
+    litellm_params:
+      model: claude-sonnet-4-6
+      api_key: "os.environ/ANTHROPIC_API_KEY"
+
+# Роутинг по умолчанию
+router_settings:
+  # Сначала локальный кодер, при ошибке — облако
+  routing_strategy: simple-shuffle
+  fallbacks:
+    - {"local-coder": ["cloud-strong"]}
+    - {"local-writer": ["cloud-claude"]}
+
+# Общие настройки
+general_settings:
+  master_key: "os.environ/LITELLM_MASTER_KEY"  # задать в .env
+
+litellm_settings:
+  # Логировать запросы
+  set_verbose: false
+  # Таймаут запроса к локальной модели
+  request_timeout: 120

@@ -1,0 +1,24 @@
+# Окружение
+.env
+
+# Модели (большие файлы)
+hf/
+llamacpp/data/models/
+*.gguf
+*.exl2
+*.safetensors
+*.bin
+*.pt
+
+# Harbor данные
+harbor_data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Прочее
+.DS_Store
+*.log

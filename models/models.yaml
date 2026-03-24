@@ -1,0 +1,74 @@
+# Реестр моделей для локального LLM стека
+# Используется скриптами download-*.sh и switch-model.sh
+
+models:
+  # --- EXL2 (TabbyAPI / ExLlamaV2) ---
+  coder-7b:
+    repo: bartowski/Qwen2.5-Coder-7B-Instruct-exl2
+    branch: 6_5
+    format: exl2
+    purpose: Основной кодер (генерация, рефакторинг, тесты)
+    vram_4k:  "7.2 GB"
+    vram_16k: "8.6 GB"
+    vram_32k: "10.6 GB"
+    recommended: true
+
+  writer-14b:
+    repo: bartowski/Qwen2.5-14B-Instruct-exl2
+    branch: 4_25
+    format: exl2
+    purpose: ТЗ, архитектура, доки, RFC, планы
+    vram_4k:  "10.1 GB"
+    vram_16k: "13.0 GB"
+    note: "На границе 12 GB VRAM — держи ctx <= 8192"
+    recommended: true
+
+  coder-14b-universal:
+    repo: bartowski/Qwen2.5-Coder-14B-Instruct-exl2
+    branch: 4_25
+    format: exl2
+    purpose: Универсальная альтернатива (код + текст)
+    vram_4k:  "10.1 GB"
+    vram_16k: "13.0 GB"
+    note: "Медленнее 7B-кодера, но один на всё"
+
+  llama-8b-fast:
+    repo: bartowski/Meta-Llama-3.1-8B-Instruct-exl2
+    branch: 6_5
+    format: exl2
+    purpose: Быстрый резерв, черновики, объяснения
+    vram_4k: "~8 GB"
+
+  coder-32b-heavy:
+    repo: bartowski/Qwen2.5-Coder-32B-Instruct-exl2
+    branch: 4_0
+    format: exl2
+    purpose: Сложный рефакторинг, архитектурный анализ
+    note: "Не влезает в 12 GB VRAM — используй AirLLM"
+
+  # --- GGUF (llama.cpp) ---
+  coder-7b-gguf:
+    repo: Qwen/Qwen2.5-Coder-7B-Instruct-GGUF
+    file_q5: Qwen2.5-Coder-7B-Instruct-Q5_K_M.gguf
+    file_q4: Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf
+    format: gguf
+    size_q5: "5.44 GB"
+    size_q4: "4.68 GB"
+    purpose: Кодер (резервный стек llama.cpp)
+
+  writer-14b-gguf:
+    repo: Qwen/Qwen2.5-14B-Instruct-GGUF
+    file_q5: Qwen2.5-14B-Instruct-Q5_K_M.gguf
+    file_q4: Qwen2.5-14B-Instruct-Q4_K_M.gguf
+    format: gguf
+    size_q5: "10.5 GB"
+    size_q4: "8.99 GB"
+    purpose: Тексты / доки (резервный стек llama.cpp)
+
+  # --- AirLLM (тяжёлые модели, layer-wise) ---
+  coder-32b-airllm:
+    repo: Qwen/Qwen2.5-Coder-32B-Instruct
+    format: airllm
+    compression: 4bit
+    ctx: 8192
+    purpose: Тяжёлый кодер когда нет нужного VRAM
