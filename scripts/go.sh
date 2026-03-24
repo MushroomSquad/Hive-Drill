@@ -251,12 +251,14 @@ PROMPT_EOF
 
 $(cat "${brief_file}")"
 
-    if ! echo "${full_prompt}" | claude --no-markdown-fence > "${plan_file}" 2>/dev/null; then
-        # Fallback: try without flags
-        if ! echo "${full_prompt}" | claude > "${plan_file}" 2>/dev/null; then
-            log_warn "Claude returned an error. Check ${plan_file} manually."
-        fi
+    # claude -p = non-interactive print mode (не ждёт терминал)
+    local tmp_prompt
+    tmp_prompt=$(mktemp)
+    echo "${full_prompt}" > "${tmp_prompt}"
+    if ! claude -p "$(cat "${tmp_prompt}")" > "${plan_file}" 2>/dev/null; then
+        log_warn "Claude returned an error. Check ${plan_file} manually."
     fi
+    rm -f "${tmp_prompt}"
 
     if [[ -f "${plan_file}" && -s "${plan_file}" ]]; then
         # Fix frontmatter values
@@ -367,9 +369,13 @@ PROMPT_EOF
 
 $(cat "${plan_file}")"
 
-    if ! echo "${full_prompt}" | claude > "${tasks_file}" 2>/dev/null; then
+    local tmp_prompt
+    tmp_prompt=$(mktemp)
+    echo "${full_prompt}" > "${tmp_prompt}"
+    if ! claude -p "$(cat "${tmp_prompt}")" > "${tasks_file}" 2>/dev/null; then
         log_warn "Claude returned an error generating tasks."
     fi
+    rm -f "${tmp_prompt}"
 
     if [[ -f "${tasks_file}" && -s "${tasks_file}" ]]; then
         log_success "Tasks generated: ${tasks_file}"
@@ -410,12 +416,16 @@ PROMPT_EOF
 
 $(cat "${tasks_file}")"
 
-    # Run codex in project root
-    if ! (cd "${PROJECT_ROOT}" && echo "${full_prompt}" | codex 2>&1 | tee "${code_log}"); then
+    # codex -q = non-interactive quiet mode (не ждёт терминал)
+    local tmp_prompt
+    tmp_prompt=$(mktemp)
+    echo "${full_prompt}" > "${tmp_prompt}"
+    if ! (cd "${PROJECT_ROOT}" && codex -q "$(cat "${tmp_prompt}")" 2>&1 | tee "${code_log}"); then
         log_warn "Codex exited with error. Check ${code_log}"
     else
         log_success "Codex finished. See ${code_log}"
     fi
+    rm -f "${tmp_prompt}"
 }
 
 # ─── Stage 4: Tests ──────────────────────────────────────────────────────────
@@ -582,9 +592,13 @@ $(cat "${plan_file}" 2>/dev/null || echo "(no plan)")
 DIFF:
 ${diff_output:-(no diff — no changes detected)}"
 
-    if ! echo "${full_prompt}" | claude > "${findings_file}" 2>/dev/null; then
+    local tmp_prompt
+    tmp_prompt=$(mktemp)
+    echo "${full_prompt}" > "${tmp_prompt}"
+    if ! claude -p "$(cat "${tmp_prompt}")" > "${findings_file}" 2>/dev/null; then
         log_warn "Claude review returned an error."
     fi
+    rm -f "${tmp_prompt}"
 
     if [[ -f "${findings_file}" && -s "${findings_file}" ]]; then
         set_frontmatter_value "${findings_file}" "task_id" "${TASK_ID}"
