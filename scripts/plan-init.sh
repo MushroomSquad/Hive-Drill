@@ -23,7 +23,7 @@ echo "Создаю: $RUN_DIR"
 cat > "$RUN_DIR/brief.md" << BRIEF
 # Brief: $TASK_ID
 
-_Создан: $DATE | Blueprint: $blueprint_
+_Создан: $DATE | Blueprint: $BLUEPRINT
 
 ## Goal
 <!-- Что нужно сделать и зачем -->

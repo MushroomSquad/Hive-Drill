@@ -1,3 +1,13 @@
+---
+project: template 2
+extracted: 2026-03-24 21:01
+---
+
+# Docs: template 2
+
+
+## README
+
 # AI Dev OS
 
 Производственная система разработки с AI: Cursor + Warp + Codex + Claude Code + локальный LLM стек.
@@ -18,7 +28,7 @@
 ├─────────────────────────────────────────────────────────────┤
 │  Tool-bus         MCP (GitHub, Linear, Postgres, Browser...) │
 ├─────────────────────────────────────────────────────────────┤
-│  Blueprints       .ai/ (пайплайны, скиллы, память, раны)    │
+│  Blueprints       .ai/ (пайплайны, скиллы, память, ранзы)   │
 ├─────────────────────────────────────────────────────────────┤
 │  Local LLM        llm/ (Harbor + TabbyAPI + llama.cpp)       │
 └─────────────────────────────────────────────────────────────┘
@@ -48,11 +58,11 @@
 ```
 .ai/
   base/          — канон: правила, архитектура, критерии done
-  blueprints/    — шаблоны пайплайнов (feature, bugfix, refactor, review, release)
+  blueprints/    — шаблоны пайплайнов (feature, bugfix, refactor...)
   skills/        — переиспользуемые micro-workflow
   pipelines/     — YAML-пайплайны для Oz/CI
   routing/       — policy маршрутизации задач
-  runs/          — артефакты каждого прогона (.gitignore)
+  runs/          — артефакты каждого прогона
   evals/         — золотые тесты для blueprint'ов
 .codex/          — config.toml (cloud + local профили)
 .cursor/rules/   — editor-specific правила
@@ -60,18 +70,14 @@
 mcp/             — конфигурация MCP серверов
 scripts/         — ai-check, blueprint-run, plan-init, package-pr
 llm/             — локальный LLM стек (Harbor + TabbyAPI + llama.cpp)
-tests/           — тесты для всех скриптов (встроенный runner, без зависимостей)
-vault/           — Obsidian workspace (briefs, канбан, docs, canvas)
 ```
-
----
 
 ## Быстрый старт
 
 ### 1. Инициализация системы
 
 ```bash
-./scripts/init.sh --all
+./scripts/init.sh
 ```
 
 Скрипт: проверит зависимости, скопирует `.env.example` → `.env`, настроит MCP, проверит локальный LLM стек.
@@ -84,107 +90,38 @@ just llm-up              # TabbyAPI + кодер 7B
 ./llm/setup/install.sh   # первая установка
 ```
 
-### 3. Создать и запустить задачу
+### 3. Запустить blueprint-пайплайн
 
 ```bash
-# Создать brief задачи
-just new FEAT-001
+# Новая фича
+just bp feature TASK-123
 
-# Заполнить vault/00-inbox/FEAT-001.md, изменить status: draft → status: ready
+# Баг-фикс
+just bp bugfix BUG-456
 
-# Запустить полный pipeline (Plan → Code → Tests → Review → PR)
-just go FEAT-001
-
-# Или с конкретной стадии (0-6)
-just go-from FEAT-001 3
+# Code review
+just bp review PR-789
 ```
 
-### 4. Быстрые проверки
+### 4. Проверить статус
 
 ```bash
-just status              # статус агентов и сервисов
-just check               # ai-check.sh (lint + tests + secrets)
-bash tests/run_tests.sh  # тесты самих скриптов
+just status              # все агенты и сервисы
+./scripts/ai-check.sh    # валидация проекта
 ```
-
----
 
 ## Жизненный цикл pipeline
 
 ```
 Intake (brief.md)
-  → Architectural pass — Claude Code (plan.md)       [⏸ Gate: human approve]
-    → Task slicing — Claude / Cursor (tasks.md)
+  → Architectural pass — Claude Code (plan.md)
+    → Task slicing — Claude / Cursor (tasks.yaml)
       → Isolated execution — Codex в worktree (код)
-        → Verification — scripts/ai-check.sh (test-report.md)
-          → Narrative review — Claude Code (findings.md)   [⏸ Gate: human approve]
+        → Verification — scripts/ai-check.sh (verification.md)
+          → Narrative review — Claude Code (findings.md)
             → PR packaging — Codex/Cursor (pr-body.md)
               → Retro → обновление BASE.md / blueprints
 ```
-
-### Стадии pipeline
-
-| # | Стадия | Агент | Артефакт | Гейт |
-|---|--------|-------|----------|------|
-| 0 | Brief  | Human | `brief.md` | — |
-| 1 | Plan   | Claude | `plan.md` | ⏸ y/n/e |
-| 2 | Tasks  | Claude | `tasks.md` | — |
-| 3 | Code   | Codex | изменения в worktree | — |
-| 4 | Tests  | scripts | `test-report.md` | — |
-| 5 | Review | Claude | `findings.md` | ⏸ y/n/e |
-| 6 | PR     | scripts | `pr-body.md` | — |
-
----
-
-## Тестирование
-
-Все скрипты покрыты тестами. Тестовый фреймворк встроен, внешних зависимостей нет.
-
-```bash
-# Запустить все тесты
-bash tests/run_tests.sh
-
-# Запустить только нужные суиты
-bash tests/run_tests.sh gate canvas worktree
-```
-
-| Файл теста | Покрывает |
-|------------|-----------|
-| `test_new.sh` | `scripts/new.sh` — создание задачи |
-| `test_gate.sh` | `scripts/gate.sh` — ворота одобрения |
-| `test_ai_check.sh` | `scripts/ai-check.sh` — проверочный шлюз |
-| `test_canvas.sh` | `scripts/canvas-add.sh`, `canvas-move.sh` |
-| `test_plan_init.sh` | `scripts/plan-init.sh` — инициализация рана |
-| `test_worktree.sh` | `scripts/worktree.sh` — git worktrees |
-| `test_package_pr.sh` | `scripts/package-pr.sh` — PR packaging |
-| `test_go_pipeline.sh` | `scripts/go.sh` — интеграционный тест всего pipeline |
-| `test_canvas_arch.sh` | `scripts/canvas-arch.sh` — генерация архитектурной схемы |
-| `test_status.sh` | `scripts/status.sh` — статус системы |
-
----
-
-## GSD (get-shit-done) интеграция
-
-[GSD](https://github.com/gsd-build/get-shit-done) уже установлен глобально в `~/.claude/hooks/` (v1.30+).
-Работает прозрачно для всех сессий Claude Code.
-
-**Что GSD добавляет:**
-
-| Hook | Функция |
-|------|---------|
-| `gsd-context-monitor` | Предупреждает агента при context window < 35% / 25% |
-| `gsd-prompt-guard` | Защищает `.planning/` от prompt injection |
-| `gsd-statusline` | Statusline: модель · context% · директория |
-| `gsd-check-update` | Проверяет обновления при старте сессии |
-
-**Совместимость с AI Dev OS**: GSD работает на уровне Claude Code хуков, AI Dev OS — на уровне pipeline-оркестрации. Системы дополняют друг друга и не конфликтуют.
-
-Если хочешь использовать GSD `.planning/` convention в этом проекте, добавь в `.gitignore`:
-```
-.planning/
-```
-
----
 
 ## Локальный LLM
 
@@ -199,9 +136,88 @@ cd llm
 ./profiles/tabbyapi-coder.sh
 ```
 
-Переключение профилей:
-```bash
-./scripts/switch-model.sh coder    # Qwen2.5-Coder 7B (daily)
-./scripts/switch-model.sh writer   # Qwen2.5 14B (docs, ТЗ)
-./scripts/switch-model.sh llamacpp # fallback
-```
+
+## AGENTS
+
+# Agent Instructions
+
+Read `.ai/base/BASE.md` first — it is the canonical source of project rules.
+
+## Workflow selection
+For any non-trivial task, select the matching blueprint from `.ai/blueprints/`:
+- New feature → `.ai/blueprints/feature-v1.md`
+- Bug fix → `.ai/blueprints/bugfix-v1.md`
+- Refactoring → `.ai/blueprints/refactor-v1.md`
+- Code review → `.ai/blueprints/review-v1.md`
+- Release → `.ai/blueprints/release-v1.md`
+
+## Execution rules
+1. Create a run directory: `.ai/runs/<TASK-ID>/` before starting work.
+2. Produce `brief.md` for every task before touching code.
+3. Work in a separate git worktree — never directly on the main working tree.
+4. Run `scripts/ai-check.sh` after every change set. Do not propose completion before it passes.
+5. For repeated operations, prefer existing `scripts/` and `.ai/skills/` instead of improvising.
+
+## Model routing
+- You are operating as the **executor** role (Codex / Codex-local).
+- For P0 (security, architecture, migration) tasks: stop and escalate to Claude Code.
+- For P2/P3 (boilerplate, docs, triage): prefer the local model profile.
+- See `.ai/routing/policy.yaml` for the full routing policy.
+
+## Output expectations
+- Every completed task must produce: `brief.md`, `tasks.yaml`, relevant output files, `verification.md`.
+- All artifacts go into `.ai/runs/<TASK-ID>/`.
+
+## What to avoid
+- Do not refactor code that wasn't asked about.
+- Do not add error handling, comments, or type annotations not explicitly requested.
+- Do not commit secrets. Check `.env.example` for the list of sensitive keys.
+- Do not amend existing commits — always create new ones.
+
+
+## CLAUDE
+
+# Claude Code Instructions
+
+Read `.ai/base/BASE.md` first — it is the single source of project truth.
+
+## My role in this system
+I am the **architect and long-horizon thinker**. My primary responsibilities:
+- Decompose complex tasks into actionable plans
+- Write `plan.md` and `tasks.yaml` for Codex execution
+- Do architectural risk analysis and narrative review
+- Handle P0 (critical) tasks end-to-end
+- Write `findings.md` after implementation is done
+
+## Default operating mode
+**Plan first, implement in small verified steps.**
+
+Before writing any code on a non-trivial task:
+1. Read the relevant files (don't assume structure)
+2. Write a plan — options, chosen approach, risks, rollback
+3. Get implicit or explicit confirmation before executing
+4. Produce run artifacts in `.ai/runs/<TASK-ID>/`
+
+## Workflow templates
+Use blueprints from `.ai/blueprints/` as the template for every pipeline run.
+Store all artifacts in `.ai/runs/<TASK-ID>/`.
+
+## Git discipline
+- Work in git worktrees for parallel/isolated tasks
+- Branch naming: `<agent>/<task-id>-<short-description>`
+- Never force push. Never amend published commits.
+- Run `scripts/ai-check.sh` before marking any task done.
+
+## Model routing (opusplan)
+- For planning and architecture: use Opus / opusplan
+- For implementation execution: Sonnet is appropriate
+- Subagent tasks: use `CLAUDE_CODE_SUBAGENT_MODEL` if set
+
+## Escalation
+If I discover a P0 issue (security flaw, data migration risk, unclear architectural impact) while executing a P1/P2 task:
+1. Stop current work
+2. Write a findings note in `.ai/runs/<TASK-ID>/findings.md`
+3. Ask the human for direction before proceeding
+
+## Memory updates
+After every completed pipeline run, check if BASE.md, blueprints, or skills need to be updated based on what was learned. Propose updates explicitly — don't silently modify them.

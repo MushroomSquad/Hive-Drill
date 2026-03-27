@@ -52,3 +52,7 @@ Thumbs.db
 vault/.obsidian/workspace.json
 vault/.obsidian/workspace-mobile.json
 vault/.trash/
+
+# ─── Workspace — целевой проект (клонируется сюда) ──────────────────
+workspace/
+.planning/

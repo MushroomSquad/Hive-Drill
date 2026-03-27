@@ -54,7 +54,7 @@
       "id": "card-example-1",
       "type": "text",
       "text": "**FEAT-001**\np1 · feature\nДобавить OAuth login",
-      "x": 20,
+      "x": 580,
       "y": 440,
       "width": 200,
       "height": 80,
@@ -99,6 +99,16 @@
       "width": 200,
       "height": 80,
       "color": "5"
+    },
+    {
+      "id": "card-erebp5he",
+      "type": "text",
+      "text": "**P0-001**\np0 · bugfix",
+      "x": 20,
+      "y": 540,
+      "width": 200,
+      "height": 80,
+      "color": "1"
     }
   ],
   "edges": []

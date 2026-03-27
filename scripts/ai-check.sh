@@ -117,7 +117,17 @@ case "$PROJECT_TYPE" in
   make)
     grep -q "^test:" Makefile && run_check "make test" "make test" || skip "make test"
     ;;
-  *) skip "tests (тип проекта неизвестен)" ;;
+  *)
+    # Fallback: try just test if justfile exists
+    if command -v just &>/dev/null && [ -f justfile ] && just --list 2>/dev/null | grep -q "^test "; then
+      run_check "just test" "just test"
+    # Try the built-in bash test runner
+    elif [ -f tests/run_tests.sh ]; then
+      run_check "bash tests" "bash tests/run_tests.sh"
+    else
+      skip "tests (тип проекта неизвестен)"
+    fi
+    ;;
 esac
 echo "" | tee -a "$LOG_FILE"
 

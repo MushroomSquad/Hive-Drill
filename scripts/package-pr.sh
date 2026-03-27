@@ -63,7 +63,7 @@ $([ -n "$BRIEF_GOAL" ] && echo "$BRIEF_GOAL" || echo "- TODO: заполни и�
 - findings: \`.ai/runs/$TASK_ID/findings.md\`
 
 ---
-_Generated: $DATE_
+_Generated: $DATE
 PR
   ok "Создан: $RUN_DIR/pr-body.md"
 else

@@ -1,0 +1,265 @@
+{
+  "nodes": [
+    {
+      "id": "title",
+      "type": "text",
+      "text": "# AI Dev OS — Архитектура системы",
+      "x": 600,
+      "y": -80,
+      "width": 400,
+      "height": 60,
+      "color": "6"
+    },
+    {
+      "id": "human",
+      "type": "text",
+      "text": "## 👤 Human\n\n- Пишет brief\n- Одобряет plan\n- Одобряет review\n- Управляет через `just`",
+      "x": 0,
+      "y": 100,
+      "width": 200,
+      "height": 160,
+      "color": "4"
+    },
+    {
+      "id": "justfile",
+      "type": "text",
+      "text": "## ⚡ justfile\n\n`just new` / `just go`\n`just go-from`\n`just status`\n`just wt-*`",
+      "x": 260,
+      "y": 100,
+      "width": 180,
+      "height": 160,
+      "color": "6"
+    },
+    {
+      "id": "go-sh",
+      "type": "text",
+      "text": "## 🔄 go.sh\n### Pipeline Orchestrator\n\nСтадии 0–6\nГейты\nCanvas-обновление\nАртефакты",
+      "x": 500,
+      "y": 80,
+      "width": 200,
+      "height": 200,
+      "color": "1"
+    },
+    {
+      "id": "claude",
+      "type": "text",
+      "text": "## 🧠 Claude Code\n### Architect\n\nСтадия 1: Plan\nСтадия 2: Tasks\nСтадия 5: Review\n\n`claude -p <prompt>`",
+      "x": 780,
+      "y": 0,
+      "width": 200,
+      "height": 200,
+      "color": "3"
+    },
+    {
+      "id": "codex",
+      "type": "text",
+      "text": "## 💻 Codex\n### Implementer\n\nСтадия 3: Code\n`--full-auto`\n`workspace-write`\n\n`codex exec <tasks>`",
+      "x": 780,
+      "y": 260,
+      "width": 200,
+      "height": 200,
+      "color": "1"
+    },
+    {
+      "id": "scripts",
+      "type": "text",
+      "text": "## 🛠 scripts/\n\n`new.sh` — создать задачу\n`go.sh` — пайплайн\n`canvas-add.sh` — +карточка\n`canvas-move.sh` — двигать\n`canvas-arch.sh` — схема\n`ai-check.sh` — валидация\n`worktree.sh` — worktrees\n`package-pr.sh` — PR",
+      "x": 260,
+      "y": 340,
+      "width": 220,
+      "height": 240,
+      "color": "6"
+    },
+    {
+      "id": "vault",
+      "type": "text",
+      "text": "## 📚 vault/\n### Obsidian Knowledge Base\n\n`00-inbox/` — новые брифы\n`01-active/` — в работе\n`02-done/` — завершённые\n`canvas/` — визуализации\n`docs/` — документация\n`templates/` — шаблоны",
+      "x": 0,
+      "y": 380,
+      "width": 220,
+      "height": 220,
+      "color": "5"
+    },
+    {
+      "id": "ai-runs",
+      "type": "text",
+      "text": "## 📁 .ai/runs/\n### Task Artifacts\n\n`brief.md`\n`plan.md`\n`tasks.md`\n`findings.md`\n`test-report.md`\n`pr-body.md`\n`verification.md`",
+      "x": 500,
+      "y": 360,
+      "width": 200,
+      "height": 220,
+      "color": "5"
+    },
+    {
+      "id": "ai-base",
+      "type": "text",
+      "text": "## 📐 .ai/base/\n\n`BASE.md` — канон проекта\n`architecture-map.md`\n`glossary.md`\n`done-criteria.md`",
+      "x": 780,
+      "y": 520,
+      "width": 200,
+      "height": 160,
+      "color": "5"
+    },
+    {
+      "id": "ai-blueprints",
+      "type": "text",
+      "text": "## 🗺 .ai/blueprints/\n\n`feature-v1.md`\n`bugfix-v1.md`\n`refactor-v1.md`\n`review-v1.md`\n`release-v1.md`",
+      "x": 1000,
+      "y": 520,
+      "width": 200,
+      "height": 160,
+      "color": "5"
+    },
+    {
+      "id": "mcp",
+      "type": "text",
+      "text": "## 🔌 MCP\n\n`mcp/config.json`\nGitHub / Linear\nPostgres / Browser\nMemory / Search",
+      "x": 1000,
+      "y": 80,
+      "width": 180,
+      "height": 160,
+      "color": "4"
+    },
+    {
+      "id": "canvas-board",
+      "type": "text",
+      "text": "## 🖼 canvas/\n\n`project-board.canvas`\n→ Kanban задач\n\n`pipeline-flow.canvas`\n→ Схема стадий\n\n`architecture.canvas`\n→ Архитектура системы",
+      "x": 0,
+      "y": 660,
+      "width": 220,
+      "height": 180,
+      "color": "4"
+    },
+    {
+      "id": "llm",
+      "type": "text",
+      "text": "## 🤖 llm/\n### Local Models\n\n`profiles/` — конфиги\n`setup/` — установка\nTabbyAPI / Ollama\nNVIDIA / CPU",
+      "x": 260,
+      "y": 640,
+      "width": 200,
+      "height": 160,
+      "color": "6"
+    },
+    {
+      "id": "output",
+      "type": "text",
+      "text": "## 🚀 Output\n\nGit branch\nGitHub PR\n`pr-body.md`\nАртефакты\nв `02-done/`",
+      "x": 1000,
+      "y": 260,
+      "width": 180,
+      "height": 180,
+      "color": "5"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-human-just",
+      "fromNode": "human",
+      "fromSide": "right",
+      "toNode": "justfile",
+      "toSide": "left",
+      "label": "команды"
+    },
+    {
+      "id": "e-just-go",
+      "fromNode": "justfile",
+      "fromSide": "right",
+      "toNode": "go-sh",
+      "toSide": "left",
+      "label": "go / go-from"
+    },
+    {
+      "id": "e-go-claude",
+      "fromNode": "go-sh",
+      "fromSide": "right",
+      "toNode": "claude",
+      "toSide": "left",
+      "label": "plan / review"
+    },
+    {
+      "id": "e-go-codex",
+      "fromNode": "go-sh",
+      "fromSide": "right",
+      "toNode": "codex",
+      "toSide": "left",
+      "label": "code"
+    },
+    {
+      "id": "e-go-scripts",
+      "fromNode": "go-sh",
+      "fromSide": "bottom",
+      "toNode": "scripts",
+      "toSide": "top",
+      "label": "вызов"
+    },
+    {
+      "id": "e-go-runs",
+      "fromNode": "go-sh",
+      "fromSide": "bottom",
+      "toNode": "ai-runs",
+      "toSide": "top",
+      "label": "артефакты"
+    },
+    {
+      "id": "e-scripts-vault",
+      "fromNode": "scripts",
+      "fromSide": "left",
+      "toNode": "vault",
+      "toSide": "right",
+      "label": "new / move"
+    },
+    {
+      "id": "e-scripts-canvas",
+      "fromNode": "scripts",
+      "fromSide": "bottom",
+      "toNode": "canvas-board",
+      "toSide": "top",
+      "label": "canvas-*.sh"
+    },
+    {
+      "id": "e-codex-output",
+      "fromNode": "codex",
+      "fromSide": "right",
+      "toNode": "output",
+      "toSide": "left",
+      "label": "diff / PR"
+    },
+    {
+      "id": "e-claude-mcp",
+      "fromNode": "claude",
+      "fromSide": "right",
+      "toNode": "mcp",
+      "toSide": "left",
+      "label": "tools"
+    },
+    {
+      "id": "e-runs-base",
+      "fromNode": "ai-runs",
+      "fromSide": "right",
+      "toNode": "ai-base",
+      "toSide": "left",
+      "label": "читает"
+    },
+    {
+      "id": "e-base-blueprints",
+      "fromNode": "ai-base",
+      "fromSide": "right",
+      "toNode": "ai-blueprints",
+      "toSide": "left"
+    },
+    {
+      "id": "e-vault-canvas",
+      "fromNode": "vault",
+      "fromSide": "bottom",
+      "toNode": "canvas-board",
+      "toSide": "top"
+    },
+    {
+      "id": "e-vault-llm",
+      "fromNode": "vault",
+      "fromSide": "right",
+      "toNode": "llm",
+      "toSide": "left"
+    }
+  ]
+}

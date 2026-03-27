@@ -2,8 +2,10 @@
 
 ## Доски
 
-- [[canvas/project-board|Project Board — Kanban]]
+- [[canvas/project-board|Project Board — Kanban задач]]
 - [[canvas/pipeline-flow|Pipeline Flow — 7 стадий]]
+- [[canvas/architecture|Architecture — Схема системы]]
+- [[canvas/project-arch|Project Arch — Схема текущего проекта]] *(генерируется: `just arch`)*
 
 ---
 
@@ -27,6 +29,9 @@ SORT priority ASC
 | `just go-from TASK-ID STAGE` | Продолжить с нужной стадии |
 | `just status` | Показать статус системы |
 | `just wt-list` | Список git worktrees |
+| `just arch` | Сгенерировать canvas-схему текущего проекта |
+| `just arch-of /path` | Сгенерировать схему внешнего проекта |
+| `just docs` | Обновить документацию в vault/docs/ |
 
 ---
 

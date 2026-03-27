@@ -70,6 +70,19 @@ done
 # ─── Paths ───────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Load .env (justfile loads it too, but direct calls need this)
+[[ -f "${PROJECT_ROOT}/.env" ]] && set -a && source "${PROJECT_ROOT}/.env" 2>/dev/null && set +a || true
+
+# TARGET_ROOT — codebase where agents read/write code.
+# Set WORKSPACE in .env (relative or absolute). Defaults to PROJECT_ROOT.
+if [[ -n "${WORKSPACE:-}" ]]; then
+    [[ "${WORKSPACE}" = /* ]] && TARGET_ROOT="${WORKSPACE}" || TARGET_ROOT="${PROJECT_ROOT}/${WORKSPACE}"
+    [[ -d "${TARGET_ROOT}" ]] || die "WORKSPACE not found: ${TARGET_ROOT}\n  Run: just clone <url> <name>"
+else
+    TARGET_ROOT="${PROJECT_ROOT}"
+fi
+
 VAULT="${PROJECT_ROOT}/vault"
 RUN_DIR="${PROJECT_ROOT}/.ai/runs/${TASK_ID}"
 INBOX="${VAULT}/00-inbox"
@@ -400,7 +413,7 @@ stage_code() {
     fi
 
     log_info "Calling Codex to implement tasks..."
-    log_info "Working in project root: ${PROJECT_ROOT}"
+    log_info "Working in workspace: ${TARGET_ROOT}"
 
     local prompt
     prompt="$(cat <<'PROMPT_EOF'
@@ -420,7 +433,7 @@ $(cat "${tasks_file}")"
     local tmp_prompt
     tmp_prompt=$(mktemp)
     echo "${full_prompt}" > "${tmp_prompt}"
-    if ! (cd "${PROJECT_ROOT}" && codex -q "$(cat "${tmp_prompt}")" 2>&1 | tee "${code_log}"); then
+    if ! (cd "${TARGET_ROOT}" && codex -q "$(cat "${tmp_prompt}")" 2>&1 | tee "${code_log}"); then
         log_warn "Codex exited with error. Check ${code_log}"
     else
         log_success "Codex finished. See ${code_log}"
@@ -446,7 +459,7 @@ stage_tests() {
         local label="$1"
         shift
         log_info "Running: ${label}"
-        if (cd "${PROJECT_ROOT}" && "$@" >> "${test_report}" 2>&1); then
+        if (cd "${TARGET_ROOT}" && "$@" >> "${test_report}" 2>&1); then
             echo "- [x] ${label}: PASS" >> "${test_report}"
             log_success "${label}: PASS"
         else
@@ -458,7 +471,7 @@ stage_tests() {
     }
 
     # Detect project type and run appropriate checks
-    if [[ -f "${PROJECT_ROOT}/package.json" ]]; then
+    if [[ -f "${TARGET_ROOT}/package.json" ]]; then
         if check_cmd npm; then
             run_check "npm test" npm test --if-present
             run_check "npm lint" npm run lint --if-present
@@ -468,14 +481,14 @@ stage_tests() {
         fi
     fi
 
-    if [[ -f "${PROJECT_ROOT}/Cargo.toml" ]]; then
+    if [[ -f "${TARGET_ROOT}/Cargo.toml" ]]; then
         if check_cmd cargo; then
             run_check "cargo test" cargo test
             run_check "cargo clippy" cargo clippy -- -D warnings
         fi
     fi
 
-    if [[ -f "${PROJECT_ROOT}/pyproject.toml" ]] || [[ -f "${PROJECT_ROOT}/setup.py" ]]; then
+    if [[ -f "${TARGET_ROOT}/pyproject.toml" ]] || [[ -f "${TARGET_ROOT}/setup.py" ]]; then
         if check_cmd pytest; then
             run_check "pytest" pytest
         fi
@@ -484,7 +497,7 @@ stage_tests() {
         fi
     fi
 
-    if [[ -f "${PROJECT_ROOT}/go.mod" ]]; then
+    if [[ -f "${TARGET_ROOT}/go.mod" ]]; then
         if check_cmd go; then
             run_check "go test" go test ./...
             run_check "go vet" go vet ./...
@@ -531,9 +544,9 @@ stage_review() {
 
     local diff_output=""
     if check_cmd git; then
-        diff_output="$(cd "${PROJECT_ROOT}" && git diff HEAD 2>/dev/null || true)"
+        diff_output="$(cd "${TARGET_ROOT}" && git diff HEAD 2>/dev/null || true)"
         if [[ -z "$diff_output" ]]; then
-            diff_output="$(cd "${PROJECT_ROOT}" && git diff 2>/dev/null || true)"
+            diff_output="$(cd "${TARGET_ROOT}" && git diff 2>/dev/null || true)"
         fi
     fi
 
@@ -730,6 +743,9 @@ echo ""
 echo -e "${BOLD}AI Dev OS Pipeline${RESET} — Task: ${CYAN}${BOLD}${TASK_ID}${RESET}"
 if [[ $FROM_STAGE -gt 0 ]]; then
     echo -e "  Starting from stage: ${FROM_STAGE}"
+fi
+if [[ "${TARGET_ROOT}" != "${PROJECT_ROOT}" ]]; then
+    echo -e "  Workspace: ${CYAN}${TARGET_ROOT}${RESET}"
 fi
 echo ""
 

@@ -11,12 +11,15 @@ die()  { echo -e "${RED}[ERR]${NC}  $*"; exit 1; }
 
 INIT_MCP=false
 INIT_LLM=false
+INIT_GSD=false
 
 for arg in "$@"; do
   case "$arg" in
     --mcp) INIT_MCP=true ;;
     --llm) INIT_LLM=true ;;
-    --all) INIT_MCP=true; INIT_LLM=true ;;
+    --gsd) INIT_GSD=true ;;
+    --all) INIT_MCP=true; INIT_LLM=true; INIT_GSD=true ;;
+    --gsd) INIT_GSD=true ;;
   esac
 done
 
@@ -103,6 +106,43 @@ if [ "$INIT_LLM" = true ]; then
     bash llm/setup/install.sh
   else
     warn "llm/setup/install.sh не найден"
+  fi
+fi
+
+# ── GSD (get-shit-done) ──────────────────────────────────────────────
+if [ "$INIT_GSD" = true ]; then
+  echo ""
+  info "=== Устанавливаю GSD (get-shit-done) ==="
+
+  GSD_HOOKS_DIR="${HOME}/.claude/hooks"
+  GSD_DIR="${HOME}/.claude/get-shit-done"
+
+  if [ -f "${GSD_HOOKS_DIR}/gsd-statusline.js" ]; then
+    ok "GSD уже установлен ($(cat "${GSD_DIR}/VERSION" 2>/dev/null || echo 'версия неизвестна'))"
+  else
+    if ! command -v git &>/dev/null; then
+      warn "git не найден — пропускаю GSD установку"
+    elif ! command -v node &>/dev/null; then
+      warn "node не найден — пропускаю GSD установку"
+    else
+      GSD_TMP=$(mktemp -d)
+      info "Клонирую GSD..."
+      if git clone --depth=1 --quiet https://github.com/gsd-build/get-shit-done.git "${GSD_TMP}" 2>/dev/null; then
+        if [ -f "${GSD_TMP}/install.sh" ]; then
+          bash "${GSD_TMP}/install.sh" --yes 2>/dev/null && ok "GSD установлен" || warn "GSD install.sh вернул ошибку"
+        else
+          # Ручная установка: копируем hooks и get-shit-done/
+          mkdir -p "${GSD_HOOKS_DIR}" "${GSD_DIR}"
+          [ -d "${GSD_TMP}/hooks" ]           && cp -r "${GSD_TMP}/hooks/." "${GSD_HOOKS_DIR}/"
+          [ -d "${GSD_TMP}/get-shit-done" ]   && cp -r "${GSD_TMP}/get-shit-done/." "${GSD_DIR}/"
+          ok "GSD файлы скопированы"
+          warn "Добавь хуки вручную: ~/.claude/settings.json → hooks"
+        fi
+      else
+        warn "Не удалось клонировать GSD. Установи вручную: https://github.com/gsd-build/get-shit-done"
+      fi
+      rm -rf "${GSD_TMP}"
+    fi
   fi
 fi
 
