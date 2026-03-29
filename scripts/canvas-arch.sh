@@ -15,9 +15,38 @@ VAULT="${PROJECT_ROOT}/vault"
 CANVAS_DIR="${VAULT}/canvas"
 DOCS_DIR="${VAULT}/docs"
 
-TARGET_PROJECT="${1:-${PROJECT_ROOT}}"
 DOCS_ONLY=false
-[[ "${1:-}" == "--docs" ]] && DOCS_ONLY=true && TARGET_PROJECT="${PROJECT_ROOT}"
+[[ "${1:-}" == "--docs" ]] && DOCS_ONLY=true
+
+# Resolve target project: explicit arg → active project → roi root
+if [[ "${1:-}" == "--docs" || -z "${1:-}" ]]; then
+    TARGET_PROJECT=""
+    ACTIVE_PROJECT_NAME=""
+    CURRENT_FILE="${PROJECT_ROOT}/.ai/state/current"
+    if [[ -f "${CURRENT_FILE}" ]]; then
+        _current="$(cat "${CURRENT_FILE}" | tr -d '[:space:]')"
+        if [[ -n "${_current}" ]]; then
+            _cfg="${PROJECT_ROOT}/.ai/projects/${_current}.json"
+            if [[ -f "${_cfg}" ]]; then
+                _path="$(python3 -c "import json; print(json.load(open('${_cfg}')).get('path',''))" 2>/dev/null || echo "")"
+                if [[ -n "${_path}" ]]; then
+                    TARGET_PROJECT="${_path}"
+                    ACTIVE_PROJECT_NAME="${_current}"
+                fi
+            fi
+        fi
+    fi
+    [[ -z "${TARGET_PROJECT}" ]] && TARGET_PROJECT="${PROJECT_ROOT}"
+else
+    TARGET_PROJECT="${1}"
+    ACTIVE_PROJECT_NAME=""
+fi
+
+# Route canvas/docs to project-isolated vault when active project is set
+if [[ -n "${ACTIVE_PROJECT_NAME}" ]]; then
+    CANVAS_DIR="${VAULT}/projects/${ACTIVE_PROJECT_NAME}/canvas"
+    DOCS_DIR="${VAULT}/projects/${ACTIVE_PROJECT_NAME}"
+fi
 
 mkdir -p "${CANVAS_DIR}" "${DOCS_DIR}"
 
@@ -208,6 +237,12 @@ with open(out_path, "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=2)
 print(f"[arch] Canvas записан: {out_path}")
 PYEOF
+
+    # Дублировать канвас в сам проект
+    local project_docs="${TARGET_PROJECT}/docs"
+    mkdir -p "${project_docs}"
+    cp "${out_canvas}" "${project_docs}/architecture.canvas"
+    info "Canvas продублирован в проект: ${project_docs}/architecture.canvas"
 }
 
 # ─── Сохранить docs из README и BASE ─────────────────────────────────────────
@@ -256,9 +291,19 @@ for dep_file in ("pyproject.toml", "package.json", "Cargo.toml", "go.mod"):
         sections.append(f"\n## {dep_file}\n\n```\n{text}\n```")
         break
 
+content = "\n".join(sections)
 with open(out_path, "w", encoding="utf-8") as f:
-    f.write("\n".join(sections))
+    f.write(content)
 print(f"[arch] Docs записан: {out_path}")
+
+# Полноценный обзорный документ в сам проект
+import os
+docs_dir = project / "docs"
+docs_dir.mkdir(exist_ok=True)
+overview_path = docs_dir / "overview.md"
+with open(overview_path, "w", encoding="utf-8") as f:
+    f.write(content)
+print(f"[arch] Документация записана в проект: {overview_path}")
 PYEOF
 }
 
@@ -269,7 +314,11 @@ if $DOCS_ONLY; then
     exit 0
 fi
 
-info "Анализирую проект: ${TARGET_PROJECT}"
+if [[ -n "${ACTIVE_PROJECT_NAME}" ]]; then
+    info "Активный проект: ${ACTIVE_PROJECT_NAME} (${TARGET_PROJECT})"
+else
+    info "Анализирую проект: ${TARGET_PROJECT}"
+fi
 
 META_JSON="$(collect_metadata)"
 generate_canvas "${META_JSON}"
@@ -279,5 +328,10 @@ ok "Готово."
 echo ""
 echo "  Canvas:  ${CANVAS_DIR}/project-arch.canvas"
 echo "  Docs:    ${DOCS_DIR}/$(basename "${TARGET_PROJECT}").md"
-echo ""
-echo "  Открой в Obsidian: vault/canvas/project-arch.canvas"
+if [[ -n "${ACTIVE_PROJECT_NAME}" ]]; then
+    echo ""
+    echo "  Открой в Obsidian: vault/projects/${ACTIVE_PROJECT_NAME}/canvas/project-arch.canvas"
+else
+    echo ""
+    echo "  Открой в Obsidian: vault/canvas/project-arch.canvas"
+fi

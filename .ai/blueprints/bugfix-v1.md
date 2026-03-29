@@ -160,3 +160,9 @@ codex "Fix <BUG-ID> based on plan.md root cause"
   findings.md
   pr-body.md
 ```
+
+---
+
+## Writing standards
+
+После написания каждого документа — `/humanize`. См. BASE.md § Writing standards.

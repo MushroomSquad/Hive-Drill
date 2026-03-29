@@ -1,4 +1,4 @@
-# AI Dev OS — Home
+# 🐝 Hive Drill — Home
 
 ## Доски
 
@@ -22,12 +22,24 @@ SORT priority ASC
 
 ## Команды
 
+**Проекты**
+
 | Команда | Что делает |
 |---|---|
-| `just new TASK-ID` | Создать новую задачу (открывает brief) |
+| `just project add <name> <path>` | Зарегистрировать проект |
+| `just project switch <name>` | Переключиться на проект |
+| `just project list` | Список всех проектов |
+| `just project current` | Активный проект |
+| `just project info` | Детали активного проекта |
+
+**Pipeline**
+
+| Команда | Что делает |
+|---|---|
+| `just new TASK-ID` | Создать новую задачу (brief в inbox активного проекта) |
 | `just go TASK-ID` | Запустить полный pipeline |
 | `just go-from TASK-ID STAGE` | Продолжить с нужной стадии |
-| `just status` | Показать статус системы |
+| `just status` | Показать статус системы и активного проекта |
 | `just wt-list` | Список git worktrees |
 | `just arch` | Сгенерировать canvas-схему текущего проекта |
 | `just arch-of /path` | Сгенерировать схему внешнего проекта |
@@ -59,4 +71,4 @@ SORT priority ASC
 
 ---
 
-*Vault: `vault/` · Runs: `.ai/runs/` · Blueprints: `.ai/blueprints/`*
+*Vault: `vault/projects/<active>/` · Runs: `.ai/runs/<active>/` · Blueprints: `.ai/blueprints/`*

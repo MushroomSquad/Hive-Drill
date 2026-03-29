@@ -38,10 +38,20 @@ assert_contains "MCP" "$output"
 
 describe "status.sh — active runs detection"
 
+# Determine the correct runs dir based on the current active project
 TASK_ID="STATUS-TEST-001"
-mkdir -p "${PROJECT_ROOT}/.ai/runs/${TASK_ID}"
-touch "${PROJECT_ROOT}/.ai/runs/${TASK_ID}/plan.md"
-touch "${PROJECT_ROOT}/.ai/runs/${TASK_ID}/brief.md"
+ACTIVE_PROJECT=""
+[[ -f "${PROJECT_ROOT}/.ai/state/current" ]] && ACTIVE_PROJECT="$(cat "${PROJECT_ROOT}/.ai/state/current" | tr -d '[:space:]')"
+
+if [[ -n "${ACTIVE_PROJECT}" ]]; then
+    RUNS_TEST_DIR="${PROJECT_ROOT}/.ai/runs/${ACTIVE_PROJECT}/${TASK_ID}"
+else
+    RUNS_TEST_DIR="${PROJECT_ROOT}/.ai/runs/${TASK_ID}"
+fi
+
+mkdir -p "${RUNS_TEST_DIR}"
+touch "${RUNS_TEST_DIR}/plan.md"
+touch "${RUNS_TEST_DIR}/brief.md"
 
 output=$(cd "${PROJECT_ROOT}" && bash "${STATUS_SH}" 2>&1)
 
@@ -49,7 +59,7 @@ it "lists newly created run"
 assert_contains "${TASK_ID}" "$output"
 
 # Cleanup
-rm -rf "${PROJECT_ROOT}/.ai/runs/${TASK_ID}"
+rm -rf "${RUNS_TEST_DIR}"
 
 teardown_workspace
 print_summary

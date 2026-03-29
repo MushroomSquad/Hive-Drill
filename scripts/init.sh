@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Инициализация проекта с нуля
-# Использование: ./scripts/init.sh [--mcp] [--llm] [--all]
+# Инициализация / bootstrap for Hive Drill
+# Usage: ./scripts/init.sh [--mcp] [--llm] [--all]
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=detect-platform.sh
+source "${SCRIPT_DIR}/detect-platform.sh"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 ok()   { echo -e "${GREEN}[OK]${NC}   $*"; }
@@ -25,8 +29,27 @@ done
 
 echo ""
 echo "╔══════════════════════════════════════╗"
-echo "║        AI Dev OS — Init              ║"
+echo "║       🐝  Hive Drill — Init          ║"
 echo "╚══════════════════════════════════════╝"
+echo ""
+info "Platform: ${HIVE_PLATFORM} / ${HIVE_DISTRO} / pkg: ${HIVE_PKG}"
+
+# Windows without WSL: stop early and explain
+if [[ "$HIVE_PLATFORM" == "windows" ]]; then
+    die "Native Windows is not supported. Please use WSL2:\n  https://learn.microsoft.com/en-us/windows/wsl/install\n  Then re-run from inside WSL."
+fi
+
+# macOS: check bash version
+if [[ "$HIVE_PLATFORM" == "macos" ]]; then
+    hive_check_bash || warn "Some scripts may not work with bash ${BASH_VERSION}. Install bash 4+: brew install bash"
+fi
+
+# macOS: nudge toward Homebrew if missing
+if [[ "$HIVE_PLATFORM" == "macos" && "$HIVE_PKG" == "none" ]]; then
+    warn "Homebrew not found. Install it first: https://brew.sh"
+    warn "Then re-run this script."
+    exit 1
+fi
 echo ""
 
 # ── .env ──────────────────────────────────────────────────────────────
@@ -62,21 +85,44 @@ fi
 
 # ── Зависимости агентов ───────────────────────────────────────────────
 echo ""
-info "=== Зависимости агентов ==="
+info "=== Dependencies ==="
 
-check_cmd() {
-  local cmd=$1 name=$2 install=$3
-  if command -v "$cmd" &>/dev/null; then
-    ok "$name: $(${cmd} --version 2>/dev/null | head -1 || echo 'найден')"
-  else
-    warn "$name не найден. Установи: $install"
-  fi
+# try_install: auto-install via detected package manager; warn if unavailable
+# args: cmd display apt dnf pacman brew apk
+try_install() {
+    local cmd="$1" name="$2" apt="${3:-$1}" dnf="${4:-$1}" pac="${5:-$1}" br="${6:-$1}" apk="${7:-$1}"
+    if command -v "$cmd" &>/dev/null; then
+        ok "$name: $(${cmd} --version 2>/dev/null | head -1 || echo found)"
+        return
+    fi
+    warn "$name not found — installing..."
+    if hive_install "$name" "$apt" "$dnf" "$pac" "$br" "$apk" 2>/dev/null; then
+        command -v "$cmd" &>/dev/null && ok "$name installed." \
+            || warn "$name install may need a shell restart."
+    else
+        local hint; hint="$(hive_install_hint "$name" "$apt" "$dnf" "$pac" "$br" "$apk")"
+        warn "Could not auto-install. Run manually:  $hint"
+    fi
 }
 
-check_cmd "claude"  "Claude Code" "https://claude.ai/code"
-check_cmd "codex"   "Codex CLI"   "npm install -g @openai/codex"
-check_cmd "cursor"  "Cursor"      "https://cursor.com"
-check_cmd "just"    "just"        "cargo install just  # или brew install just"
+# No-auto-install: agent CLIs require manual auth
+check_cmd() {
+    local cmd="$1" name="$2" hint="$3"
+    command -v "$cmd" &>/dev/null \
+        && ok "$name: $(${cmd} --version 2>/dev/null | head -1 || echo found)" \
+        || warn "$name not found → $hint"
+}
+
+#                   cmd        display       apt           dnf            pacman        brew    apk
+try_install "git"   "git"      "git"         "git"         "git"          "git"         "git"
+try_install "python3" "Python 3" "python3"   "python3"     "python"       "python3"     "python3"
+try_install "just"  "just"     "just"        "just"        "just"         "just"        "just"
+try_install "gh"    "GitHub CLI" "gh"         "gh"         "github-cli"   "gh"          "github-cli"
+try_install "fzf"   "fzf"      "fzf"         "fzf"         "fzf"          "fzf"         "fzf"
+
+check_cmd "claude" "Claude Code" "https://claude.ai/code"
+check_cmd "codex"  "Codex CLI"   "npm install -g @openai/codex"
+check_cmd "cursor" "Cursor"      "https://cursor.com (optional)"
 
 # ── MCP серверы ───────────────────────────────────────────────────────
 if [ "$INIT_MCP" = true ]; then

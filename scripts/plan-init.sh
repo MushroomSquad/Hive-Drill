@@ -68,8 +68,43 @@ tasks: []
 #     depends_on: []
 TASKS
 
+# decisions.md — лог архитектурных решений
+cat > "$RUN_DIR/decisions.md" << DECISIONS
+---
+task_id: $TASK_ID
+created: $DATE
+---
+
+# Decisions: $TASK_ID
+
+<!-- Добавляй запись каждый раз, когда принимается нетривиальное решение. -->
+
+## Decision log
+
+### DEC-1: [Краткое название решения]
+
+**Date:** $DATE
+**Status:** accepted
+
+**Context**
+Почему потребовалось принять это решение?
+
+**Options considered**
+- Option A —
+- Option B —
+
+**Decision**
+Выбрали [Option X], потому что...
+
+**Consequences**
+- Positive:
+- Negative / trade-offs:
+- Follow-up tasks:
+DECISIONS
+
 echo "✓ $RUN_DIR/brief.md"
 echo "✓ $RUN_DIR/tasks.yaml"
+echo "✓ $RUN_DIR/decisions.md"
 echo ""
 echo "Следующие шаги:"
 echo "1. Заполни $RUN_DIR/brief.md"

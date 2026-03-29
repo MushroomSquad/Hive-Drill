@@ -127,3 +127,9 @@ APPROVED | REQUEST CHANGES | NEEDS DISCUSSION
 .ai/runs/PR-<ID>/
   findings.md
 ```
+
+---
+
+## Writing standards
+
+После написания `findings.md` — `/humanize`. См. BASE.md § Writing standards.

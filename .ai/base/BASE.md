@@ -1,18 +1,31 @@
-# BASE — Канон проекта
+# BASE — Project Canon
 
-Этот файл — единственный источник истины о правилах проекта.
-`AGENTS.md` и `CLAUDE.md` ссылаются на него. Не дублируй правила из BASE.md в других файлах.
+This file is the single source of truth for project rules.
+`AGENTS.md` and `CLAUDE.md` reference it. Do not duplicate rules from BASE.md elsewhere.
 
 ---
 
 ## Project mission
 
-**AI Dev OS** — производственная система разработки с AI.
-Не набор инструментов, а **фабрика повторяемой разработки** с blueprint-пайплайнами, роутингом задач по приоритету и постоянной памятью проекта.
+**Hive Drill** — a self-improving AI development pipeline. A fun side project built entirely
+by neural networks: designed, coded, tested, and maintained by AI agents.
 
-Система преобразует идею задачи в готовый PR через 7 автоматизированных стадий, использует несколько AI-агентов в изолированных git worktrees и управляет знаниями через Obsidian vault.
+Not a toolbox — a **repeatable development factory** with blueprint pipelines, priority-based
+task routing, and persistent project memory. The system turns a task idea into a merged PR
+through 7 automated stages, using multiple AI agents in isolated git worktrees, with knowledge
+managed through an Obsidian vault.
 
-**Целевая аудитория**: инженеры-одиночки и небольшие команды, которые хотят ускорить разработку с AI без потери контроля.
+One instance of Hive Drill can work on another instance of itself — picking up GitHub issues,
+running the pipeline, and pushing improvements back in a closed loop.
+
+**Target audience**: solo engineers and small teams who want to accelerate AI-assisted
+development without losing control. And anyone curious how far a self-directed AI swarm can go.
+
+---
+
+*Русский: **Hive Drill** — самосовершенствующийся AI-пайплайн разработки. Фановый проект,
+полностью сделанный нейронками: спроектирован, написан, протестирован и поддерживается
+AI-агентами. Один инстанс дорабатывает другой, пушит изменения, пулит себя — по кругу.*
 
 ---
 
@@ -32,10 +45,14 @@
 | Компонент | Отвечает за |
 |-----------|------------|
 | `scripts/go.sh` | Оркестрация pipeline (7 стадий) |
+| `scripts/new.sh` | Создание задачи (brief + канбан) |
+| `scripts/project.sh` | Управление проектами (add/switch/list/remove) |
 | `scripts/ai-check.sh` | Единый критерий done: lint + typecheck + tests + secrets |
 | `scripts/gate.sh` | Интерактивное одобрение артефактов |
-| `vault/` | Obsidian workspace: briefs, активные задачи, канбан |
-| `.ai/runs/<ID>/` | Все артефакты конкретного прогона |
+| `vault/projects/<name>/` | Изолированный Obsidian workspace для проекта |
+| `.ai/runs/<project>/<ID>/` | Все артефакты конкретного прогона |
+| `.ai/projects/<name>.json` | Реестр проектов (коммитится) |
+| `.ai/state/current` | Активный проект (локальное, не коммитится) |
 | `.ai/blueprints/` | Шаблоны pipeline (feature, bugfix, refactor, review, release) |
 | `llm/` | Локальный LLM стек (Harbor + TabbyAPI) |
 | `mcp/` | Конфигурация MCP серверов |
@@ -97,6 +114,29 @@ just status
 - **Тесты**: `tests/run_tests.sh` — встроенный test runner без внешних зависимостей
 - **Форматтер**: нет (bash — вручную, придерживаться стиля существующих скриптов)
 - **Secrets**: никогда не хардкодить, только через `.env` (проверяется в `ai-check.sh`)
+
+---
+
+## Writing standards (humanizer)
+
+**Обязательно** для всех текстовых артефактов, которые создаёт этот проект:
+
+- Все `.md` документы pipeline (`plan.md`, `findings.md`, `pr-body.md`, `brief.md`, `tasks.md`)
+- Комментарии в коде, которые пишет агент
+- README и любая другая документация
+
+**Правило**: после написания любого документа или блока комментариев — пропусти через `/humanize` (GSD skill `humanizer`).
+
+```bash
+# После создания артефакта:
+/humanize .ai/runs/<TASK-ID>/plan.md
+/humanize .ai/runs/<TASK-ID>/findings.md
+/humanize .ai/runs/<TASK-ID>/pr-body.md
+```
+
+**Зачем**: AI-генерированные тексты содержат характерные паттерны (inflated significance, AI vocabulary, em dash overuse и др.). Humanizer их убирает и добавляет живой голос.
+
+**Когда НЕ применять**: frontmatter полей (task_id, status, verdict) — их не трогать.
 
 ---
 

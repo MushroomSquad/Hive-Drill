@@ -167,3 +167,9 @@
   rollback-plan.md
   CHANGELOG-<version>.md
 ```
+
+---
+
+## Writing standards
+
+После написания каждого документа — `/humanize`. CHANGELOG — особенно важно. См. BASE.md § Writing standards.

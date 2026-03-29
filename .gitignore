@@ -48,6 +48,12 @@ Thumbs.db
 # ─── AI runs (опционально, можно убрать если хочешь хранить) ────────
 # .ai/runs/
 
+# ─── Project state (локальное — у каждого своё активное окружение) ──
+.ai/state/
+
+# ─── Project registry (.ai/projects/) — коммитится, содержит список проектов ─
+# (не игнорируем)
+
 # ─── Obsidian служебное ──────────────────────────────────────────────
 vault/.obsidian/workspace.json
 vault/.obsidian/workspace-mobile.json
@@ -56,3 +62,9 @@ vault/.trash/
 # ─── Workspace — целевой проект (клонируется сюда) ──────────────────
 workspace/
 .planning/
+
+# ─── Self-improve config (локальное) ───────────────────────────────
+.ai/self/
+
+# Obsidian personal appearance settings
+vault/.obsidian/appearance.json

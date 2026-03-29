@@ -104,6 +104,10 @@ Option X, потому что...
 - ...
 ```
 
+Параллельно с `plan.md` веди `decisions.md` — записывай каждое нетривиальное архитектурное решение по шаблону.
+
+**Humanizer**: после написания `plan.md` — `/humanize .ai/runs/<TASK-ID>/plan.md`
+
 **Criteria to proceed:** plan.md утверждён (явно или через timeout без возражений).
 
 ---
@@ -223,6 +227,8 @@ codex --profile cloud-medium "Execute T1: <описание>"
 APPROVED / NEEDS CHANGES / BLOCKED (reason)
 ```
 
+**Humanizer**: после написания `findings.md` — `/humanize .ai/runs/<TASK-ID>/findings.md`
+
 **Criteria to proceed:** verdict = APPROVED.
 
 ---
@@ -252,6 +258,8 @@ APPROVED / NEEDS CHANGES / BLOCKED (reason)
 ...
 ```
 
+**Humanizer**: после написания `pr-body.md` — `/humanize .ai/runs/<TASK-ID>/pr-body.md`
+
 ---
 
 ## Stage 7: Retro
@@ -273,7 +281,9 @@ APPROVED / NEEDS CHANGES / BLOCKED (reason)
 .ai/runs/<TASK-ID>/
   brief.md        ✅ Stage 0
   plan.md         ✅ Stage 1
+  decisions.md    ✅ Stage 1  (обновляй при каждом нетривиальном решении)
   tasks.yaml      ✅ Stage 2
+  checkpoint.yml  ✅ каждый Stage (авто)
   verification.md ✅ Stage 4
   findings.md     ✅ Stage 5
   pr-body.md      ✅ Stage 6

@@ -47,18 +47,23 @@ check_cmd() {
 
 # ─── Args ────────────────────────────────────────────────────────────────────
 if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 <TASK-ID> [--from-stage <0-6>]"
+    echo "Usage: $0 <TASK-ID> [--from-stage <0-6>] [--workspace <path|self>]"
     exit 1
 fi
 
 TASK_ID="$1"
 FROM_STAGE=0
+WORKSPACE_OVERRIDE=""   # set via --workspace flag
 
 shift
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --from-stage)
             FROM_STAGE="${2:-0}"
+            shift 2
+            ;;
+        --workspace)
+            WORKSPACE_OVERRIDE="${2:-}"
             shift 2
             ;;
         *)
@@ -75,16 +80,50 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 [[ -f "${PROJECT_ROOT}/.env" ]] && set -a && source "${PROJECT_ROOT}/.env" 2>/dev/null && set +a || true
 
 # TARGET_ROOT — codebase where agents read/write code.
-# Set WORKSPACE in .env (relative or absolute). Defaults to PROJECT_ROOT.
-if [[ -n "${WORKSPACE:-}" ]]; then
-    [[ "${WORKSPACE}" = /* ]] && TARGET_ROOT="${WORKSPACE}" || TARGET_ROOT="${PROJECT_ROOT}/${WORKSPACE}"
-    [[ -d "${TARGET_ROOT}" ]] || die "WORKSPACE not found: ${TARGET_ROOT}\n  Run: just clone <url> <name>"
+# Priority: --workspace flag > brief frontmatter > WORKSPACE in .env > PROJECT_ROOT
+resolve_target_root() {
+    local ws="${1:-}"
+    if [[ -z "$ws" ]] || [[ "$ws" == "self" ]]; then
+        echo "${PROJECT_ROOT}"
+        return
+    fi
+    if [[ "$ws" = /* ]]; then
+        echo "$ws"
+    else
+        echo "${PROJECT_ROOT}/${ws}"
+    fi
+}
+
+# ─── Project context ─────────────────────────────────────────────────────────
+# shellcheck source=project.sh
+source "${SCRIPT_DIR}/project.sh" 2>/dev/null || true
+# shellcheck source=detect-platform.sh
+source "${SCRIPT_DIR}/detect-platform.sh"
+ACTIVE_PROJECT="${ACTIVE_PROJECT:-}"
+PROJECT_PATH="${PROJECT_PATH:-}"
+roi_project_context 2>/dev/null || true
+
+[[ -z "${ACTIVE_PROJECT}" ]] && die "No active project.\n  Set one first: just project switch <name>\n  Or register:   just project add <name> <path>"
+
+# ─── Workspace / TARGET_ROOT ──────────────────────────────────────────────────
+# Priority: --workspace flag > project path > WORKSPACE in .env > PROJECT_ROOT
+if [[ -n "${WORKSPACE_OVERRIDE}" ]]; then
+    TARGET_ROOT="$(resolve_target_root "${WORKSPACE_OVERRIDE}")"
+elif [[ -n "${PROJECT_PATH:-}" ]]; then
+    TARGET_ROOT="${PROJECT_PATH}"
+elif [[ -n "${WORKSPACE:-}" ]]; then
+    TARGET_ROOT="$(resolve_target_root "${WORKSPACE}")"
 else
     TARGET_ROOT="${PROJECT_ROOT}"
 fi
 
-VAULT="${PROJECT_ROOT}/vault"
-RUN_DIR="${PROJECT_ROOT}/.ai/runs/${TASK_ID}"
+if [[ "${TARGET_ROOT}" != "${PROJECT_ROOT}" ]] && [[ ! -d "${TARGET_ROOT}" ]]; then
+    die "WORKSPACE not found: ${TARGET_ROOT}\n  Run: just clone <url> <name>"
+fi
+
+# ─── Namespaced paths ─────────────────────────────────────────────────────────
+VAULT="${PROJECT_ROOT}/vault/projects/${ACTIVE_PROJECT}"
+RUN_DIR="${PROJECT_ROOT}/.ai/runs/${ACTIVE_PROJECT}/${TASK_ID}"
 INBOX="${VAULT}/00-inbox"
 ACTIVE="${VAULT}/01-active"
 DONE="${VAULT}/02-done"
@@ -121,7 +160,52 @@ set_frontmatter_value() {
     local key="$2"
     local value="$3"
     # Replace the value in frontmatter
-    sed -i "s|^${key}:.*|${key}: ${value}|" "$file"
+    ${HIVE_SED_I} "s|^${key}:.*|${key}: ${value}|" "$file"
+}
+
+# ─── Stage retry (LangGraph retry_policy pattern) ────────────────────────────
+# Usage: run_stage_with_retry <stage_num> <function_name> [max_retries]
+# Applies to non-deterministic stages (codex, external tools).
+run_stage_with_retry() {
+    local stage_num="$1"
+    local fn="$2"
+    local max_retries="${3:-${STAGE_MAX_RETRIES:-2}}"
+
+    if [[ $stage_num -lt $FROM_STAGE ]]; then
+        log_info "Skipping stage ${stage_num} (--from-stage ${FROM_STAGE})"
+        return 0
+    fi
+
+    local attempt=1
+    local delay=5
+    while true; do
+        if "$fn"; then
+            return 0
+        fi
+        if [[ $attempt -ge $max_retries ]]; then
+            log_error "Stage ${stage_num} (${fn}) failed after ${max_retries} attempts."
+            return 1
+        fi
+        log_warn "Stage ${stage_num} failed (attempt ${attempt}/${max_retries}). Retrying in ${delay}s..."
+        sleep "${delay}"
+        delay=$(( delay * 2 ))
+        attempt=$(( attempt + 1 ))
+    done
+}
+
+# ─── Checkpoint ──────────────────────────────────────────────────────────────
+write_checkpoint() {
+    local stage_num="$1"
+    local stage_name="$2"
+    local checkpoint_file="${RUN_DIR}/checkpoint.yml"
+    cat > "${checkpoint_file}" <<YAML
+task_id: ${TASK_ID}
+project: ${ACTIVE_PROJECT}
+last_completed_stage: ${stage_num}
+last_completed_stage_name: ${stage_name}
+timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+resume_with: --from-stage $((stage_num + 1))
+YAML
 }
 
 # ─── Stage: check brief ready ────────────────────────────────────────────────
@@ -179,6 +263,19 @@ stage_check_brief() {
         log_success "Moved brief to 01-active/"
     fi
 
+    # Read workspace override from brief frontmatter (only if not set via --workspace flag)
+    if [[ -z "${WORKSPACE_OVERRIDE}" ]]; then
+        local brief_ws
+        brief_ws="$(get_frontmatter_value "${RUN_DIR}/brief.md" "workspace")"
+        if [[ -n "${brief_ws}" ]]; then
+            TARGET_ROOT="$(resolve_target_root "${brief_ws}")"
+            if [[ "${TARGET_ROOT}" != "${PROJECT_ROOT}" ]] && [[ ! -d "${TARGET_ROOT}" ]]; then
+                die "Brief 'workspace: ${brief_ws}' not found: ${TARGET_ROOT}"
+            fi
+            log_info "Workspace override from brief: ${TARGET_ROOT}"
+        fi
+    fi
+
     "${SCRIPT_DIR}/canvas-move.sh" "${TASK_ID}" "planning" 2>/dev/null || true
     log_success "Brief ready."
 }
@@ -206,9 +303,45 @@ stage_plan() {
 
     log_info "Calling Claude to generate plan..."
 
+    # Gather project snapshot so claude -p has context without needing filesystem tools
+    local project_snapshot
+    project_snapshot="$(
+        echo "=== Project: ${TARGET_ROOT} ==="
+        echo ""
+        echo "--- File tree (depth 4, excluding .git/node_modules/__pycache__) ---"
+        find "${TARGET_ROOT}" \
+            -not \( -name '.git' -prune \) \
+            -not \( -name '__pycache__' -prune \) \
+            -not \( -name 'node_modules' -prune \) \
+            -not \( -name '.venv' -prune \) \
+            -not -name '*.pyc' \
+            -maxdepth 4 -print 2>/dev/null | sort | sed "s|${TARGET_ROOT}/||" | head -200
+        echo ""
+        # Key files
+        for kf in package.json pyproject.toml setup.py Cargo.toml go.mod requirements.txt README.md; do
+            if [[ -f "${TARGET_ROOT}/${kf}" ]]; then
+                echo "--- ${kf} ---"
+                head -60 "${TARGET_ROOT}/${kf}"
+                echo ""
+            fi
+        done
+    )"
+
+    # Workspace directive for the prompt
+    local workspace_directive
+    if [[ "${TARGET_ROOT}" != "${PROJECT_ROOT}" ]]; then
+        workspace_directive="You are planning changes to the TARGET PROJECT at: ${TARGET_ROOT}
+Do NOT suggest changes to the AI Dev OS tool itself (at ${PROJECT_ROOT}).
+All implementation steps must modify files inside ${TARGET_ROOT}."
+    else
+        workspace_directive="You are planning a meta-task on the AI Dev OS repo itself at: ${PROJECT_ROOT}"
+    fi
+
     local prompt
     prompt="$(cat <<'PROMPT_EOF'
-You are a senior software architect. Read the task brief below and produce a detailed implementation plan.
+You are a senior software architect. Read the task brief and project snapshot below, then produce a detailed implementation plan.
+
+WORKSPACE_DIRECTIVE_PLACEHOLDER
 
 Output ONLY valid Markdown with YAML frontmatter. Use this exact structure:
 
@@ -259,10 +392,14 @@ PROMPT_EOF
     # Replace placeholders
     prompt="${prompt/TASK_ID_PLACEHOLDER/${TASK_ID}}"
     prompt="${prompt/DATE_PLACEHOLDER/$(date +%Y-%m-%d)}"
+    prompt="${prompt/WORKSPACE_DIRECTIVE_PLACEHOLDER/${workspace_directive}}"
 
     local full_prompt="${prompt}
 
-$(cat "${brief_file}")"
+$(cat "${brief_file}")
+
+PROJECT SNAPSHOT:
+${project_snapshot}"
 
     # claude -p = non-interactive print mode (не ждёт терминал)
     local tmp_prompt
@@ -281,6 +418,83 @@ $(cat "${brief_file}")"
         log_warn "Plan file is empty. Using template."
         cat "${VAULT}/templates/plan.md" > "${plan_file}"
         set_frontmatter_value "${plan_file}" "task_id" "${TASK_ID}"
+    fi
+}
+
+# ─── Plan validators ─────────────────────────────────────────────────────────
+# Запускает два быстрых claude-агента параллельно перед gate:
+#   - reality-check: реалистичен ли план?
+#   - completeness:  нет ли пропущенных рисков или шагов?
+# Вывод — информационный (не блокирует pipeline).
+validate_plan() {
+    local plan_file="${RUN_DIR}/plan.md"
+
+    if ! check_cmd claude || [[ ! -f "${plan_file}" ]]; then
+        return 0
+    fi
+
+    echo ""
+    echo -e "  ${CYAN}Running plan validators...${RESET}"
+
+    local reality_out="${RUN_DIR}/validate-reality.md"
+    local completeness_out="${RUN_DIR}/validate-completeness.md"
+
+    local reality_prompt
+    reality_prompt="You are a reality-check reviewer. Read this implementation plan and answer in 5-10 lines:
+1. Is the chosen approach realistic given the stated constraints?
+2. Are the implementation steps achievable in the described scope?
+3. Any hidden complexity or wrong assumptions?
+Reply concisely. Start with PASS or WARN.
+
+PLAN:
+$(cat "${plan_file}")"
+
+    local completeness_prompt
+    completeness_prompt="You are a completeness reviewer. Read this implementation plan and answer in 5-10 lines:
+1. Are there missing steps that will be obviously needed?
+2. Are all stated risks covered with mitigations?
+3. Is the test strategy sufficient for the described changes?
+Reply concisely. Start with PASS or WARN.
+
+PLAN:
+$(cat "${plan_file}")"
+
+    # Run both validators in parallel
+    local tmp_r tmp_c
+    tmp_r=$(mktemp)
+    tmp_c=$(mktemp)
+
+    claude -p "${reality_prompt}" > "${reality_out}" 2>/dev/null &
+    local pid_r=$!
+    claude -p "${completeness_prompt}" > "${completeness_out}" 2>/dev/null &
+    local pid_c=$!
+
+    wait "${pid_r}" 2>/dev/null || true
+    wait "${pid_c}" 2>/dev/null || true
+    rm -f "${tmp_r}" "${tmp_c}"
+
+    # Display results
+    local any_warn=false
+    for f in "${reality_out}" "${completeness_out}"; do
+        local label
+        [[ "$f" == "${reality_out}" ]] && label="Reality" || label="Completeness"
+        if [[ -f "$f" && -s "$f" ]]; then
+            local first_line
+            first_line="$(head -1 "$f")"
+            if echo "${first_line}" | grep -qi "^warn"; then
+                log_warn "[${label}] ${first_line}"
+                any_warn=true
+            else
+                log_success "[${label}] ${first_line}"
+            fi
+        fi
+    done
+
+    if [[ "$any_warn" == true ]]; then
+        echo ""
+        echo -e "  ${YELLOW}Validator warnings found. Review before approving:${RESET}"
+        echo -e "  ${YELLOW}  ${reality_out}${RESET}"
+        echo -e "  ${YELLOW}  ${completeness_out}${RESET}"
     fi
 }
 
@@ -398,6 +612,32 @@ $(cat "${plan_file}")"
     fi
 }
 
+# ─── Safety: guard against self-modification ─────────────────────────────────
+guard_workspace() {
+    if [[ "${TARGET_ROOT}" == "${PROJECT_ROOT}" ]]; then
+        echo ""
+        echo -e "${RED}${BOLD}┌─────────────────────────────────────────────────┐${RESET}"
+        echo -e "${RED}${BOLD}│  ⚠  WARNING: No WORKSPACE set                   │${RESET}"
+        echo -e "${RED}${BOLD}│                                                  │${RESET}"
+        echo -e "${RED}${BOLD}│  Codex will write code into THIS roi/ directory. │${RESET}"
+        echo -e "${RED}${BOLD}│  That means the AI Dev OS itself may be changed. │${RESET}"
+        echo -e "${RED}${BOLD}│                                                  │${RESET}"
+        echo -e "${RED}${BOLD}│  To target a real project:                       │${RESET}"
+        echo -e "${RED}${BOLD}│    just clone <url> <name>                       │${RESET}"
+        echo -e "${RED}${BOLD}│    # or: echo WORKSPACE=workspace/myapp >> .env  │${RESET}"
+        echo -e "${RED}${BOLD}└─────────────────────────────────────────────────┘${RESET}"
+        echo ""
+        if [[ ! -t 0 ]]; then
+            die "WORKSPACE not set and stdin is not a terminal. Aborting to prevent self-modification."
+        fi
+        read -r -p "$(echo -e "${RED}Continue anyway and modify roi/ itself? [yes/N]${RESET} ") " ans
+        if [[ "${ans}" != "yes" ]]; then
+            die "Aborted. Set WORKSPACE in .env and re-run."
+        fi
+        log_warn "Proceeding with TARGET_ROOT=PROJECT_ROOT (self-modification mode)."
+    fi
+}
+
 # ─── Stage 3: Code ───────────────────────────────────────────────────────────
 stage_code() {
     log_stage 3 "Code (Codex)"
@@ -429,11 +669,11 @@ PROMPT_EOF
 
 $(cat "${tasks_file}")"
 
-    # codex -q = non-interactive quiet mode (не ждёт терминал)
+    # codex exec = non-interactive mode
     local tmp_prompt
     tmp_prompt=$(mktemp)
     echo "${full_prompt}" > "${tmp_prompt}"
-    if ! (cd "${TARGET_ROOT}" && codex -q "$(cat "${tmp_prompt}")" 2>&1 | tee "${code_log}"); then
+    if ! (cd "${TARGET_ROOT}" && codex exec --skip-git-repo-check --sandbox workspace-write "$(cat "${tmp_prompt}")" 2>&1 | tee "${code_log}"); then
         log_warn "Codex exited with error. Check ${code_log}"
     else
         log_success "Codex finished. See ${code_log}"
@@ -550,7 +790,7 @@ stage_review() {
         fi
     fi
 
-    log_info "Calling Claude to review changes..."
+    log_info "Calling Claude to review changes in ${TARGET_ROOT}..."
 
     local prompt
     prompt="$(cat <<'PROMPT_EOF'
@@ -697,7 +937,7 @@ copy_artifacts_to_vault() {
     local active_dir="${ACTIVE}/${TASK_ID}"
     mkdir -p "${active_dir}"
 
-    local artifacts=("plan.md" "tasks.md" "test-report.md" "findings.md")
+    local artifacts=("plan.md" "tasks.md" "test-report.md" "findings.md" "decisions.md")
     for artifact in "${artifacts[@]}"; do
         if [[ -f "${RUN_DIR}/${artifact}" ]]; then
             cp "${RUN_DIR}/${artifact}" "${active_dir}/${artifact}"
@@ -760,25 +1000,81 @@ run_stage() {
 }
 
 run_stage 0 stage_check_brief
+[[ $FROM_STAGE -le 0 ]] && write_checkpoint 0 "brief"
 # Brief найден → карточка уже в planning (двинута в stage_check_brief)
 
 run_stage 1 stage_plan
+[[ $FROM_STAGE -le 1 ]] && validate_plan
 [[ $FROM_STAGE -le 1 ]] && gate_plan
+[[ $FROM_STAGE -le 1 ]] && write_checkpoint 1 "plan"
 copy_artifacts_to_vault
 
 run_stage 2 stage_tasks
+[[ $FROM_STAGE -le 2 ]] && write_checkpoint 2 "tasks"
 copy_artifacts_to_vault
 "${SCRIPT_DIR}/canvas-move.sh" "${TASK_ID}" "inprogress" 2>/dev/null || true
 
-run_stage 3 stage_code
-run_stage 4 stage_tests
-copy_artifacts_to_vault
-"${SCRIPT_DIR}/canvas-move.sh" "${TASK_ID}" "review" 2>/dev/null || true
+# Safety check before any agent writes code (only when codex is available)
+[[ $FROM_STAGE -le 3 ]] && check_cmd codex && guard_workspace
 
-run_stage 5 stage_review
-[[ $FROM_STAGE -le 5 ]] && gate_review
-copy_artifacts_to_vault
-"${SCRIPT_DIR}/canvas-move.sh" "${TASK_ID}" "done" 2>/dev/null || true
+# ─── Execution + Review loop (crewAI @router pattern) ────────────────────────
+# If gate_review returns exit 2 (request_changes), loop back to stage 3.
+# Mirrors LangGraph: nodes can be re-entered after human interrupt + state update.
+MAX_REVIEW_LOOPS="${MAX_REVIEW_LOOPS:-2}"
+REVIEW_LOOP=0
+
+while true; do
+    REVIEW_LOOP=$(( REVIEW_LOOP + 1 ))
+    if [[ $REVIEW_LOOP -gt 1 ]]; then
+        log_stage "↺" "Revision loop ${REVIEW_LOOP}/${MAX_REVIEW_LOOPS}"
+    fi
+
+    run_stage_with_retry 3 stage_code
+    [[ $FROM_STAGE -le 3 ]] && write_checkpoint 3 "code"
+    run_stage_with_retry 4 stage_tests
+    [[ $FROM_STAGE -le 4 ]] && write_checkpoint 4 "tests"
+    copy_artifacts_to_vault
+    "${SCRIPT_DIR}/canvas-move.sh" "${TASK_ID}" "review" 2>/dev/null || true
+
+    run_stage 5 stage_review
+
+    # Capture gate exit code (gate.sh: 0=approved 1=rejected 2=request_changes 3=escalate)
+    gate_exit=0
+    if [[ $FROM_STAGE -le 5 ]]; then
+        if [[ -x "${GATE_SCRIPT}" ]]; then
+            "${GATE_SCRIPT}" "review" "${RUN_DIR}/findings.md" || gate_exit=$?
+        else
+            # Inline fallback when gate.sh is unavailable
+            echo -e "${YELLOW}${BOLD}  y${RESET} = approve   ${YELLOW}${BOLD}r${RESET} = request changes   ${YELLOW}${BOLD}n${RESET} = abort"
+            while true; do
+                read -r -p "$(echo -e "${YELLOW}Decision for review: ${RESET}")" _ans
+                case "${_ans,,}" in
+                    y|yes)   gate_exit=0; break ;;
+                    r|request) gate_exit=2; break ;;
+                    n|no|abort) gate_exit=1; break ;;
+                    *) echo "  Enter y, r, or n." ;;
+                esac
+            done
+        fi
+    fi
+
+    if [[ $gate_exit -eq 0 ]]; then
+        write_checkpoint 5 "review"
+        copy_artifacts_to_vault
+        "${SCRIPT_DIR}/canvas-move.sh" "${TASK_ID}" "done" 2>/dev/null || true
+        break
+    elif [[ $gate_exit -eq 2 ]]; then
+        if [[ $REVIEW_LOOP -ge $MAX_REVIEW_LOOPS ]]; then
+            die "Max revision loops (${MAX_REVIEW_LOOPS}) reached. Stopping pipeline."
+        fi
+        log_warn "Revision requested. Looping back to Stage 3 (attempt ${REVIEW_LOOP}/${MAX_REVIEW_LOOPS})."
+        # Reset FROM_STAGE so stages 3-5 run again
+        FROM_STAGE=3
+        continue
+    else
+        die "Gate rejected or escalated (exit ${gate_exit}). Pipeline stopped."
+    fi
+done
 
 run_stage 6 stage_pr
 

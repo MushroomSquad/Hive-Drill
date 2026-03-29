@@ -1,207 +1,287 @@
-# AI Dev OS
+```
+                          ╱╲                  ╱╲
+                         ╱  ╲                ╱  ╲
+                        ╱    ╲              ╱    ╲
+           ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+         ░░░░░░░░░░░░░    ░░░░░░░░░░░░░░░░░    ░░░░░░░░░░░░░
+          ░░░░░░░░░░░░░    ░░░░░░░░░░░░░░░    ░░░░░░░░░░░░░
+                        ╔═══════════════════╗
+                        ║  ◉◉◉         ◉◉◉  ║
+                        ║     ╲       ╱     ║
+                        ║      ╰─────╯      ║
+                        ╠═══════════════════╣
+  ◄══◄══◄══◄══◄══◄══◄═══╣ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ╠═══►══►══►══►══►══►══►
+  ◄══◄══◄══◄══◄══◄══◄═══╣ ███████████████ ╠═══►══►══►══►══►══►══►
+  ◄══◄══◄══◄══◄══◄══◄═══╣ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ╠═══►══►══►══►══►══►══►
+                        ║ ███████████████ ║
+                        ║ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ║
+                        ║ ███████████████ ║
+                        ║ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ║
+                        ║ ███████████████ ║
+                        ╚════════╦══════╝
+                                ▓║▓
+                               ░─╫─░
+                                ▓║▓
+                                ─╫─
+                               ╱   ╲
+```
 
-Производственная система разработки с AI: Cursor + Warp + Codex + Claude Code + локальный LLM стек.
+<h1 align="center">🐝 Hive Drill</h1>
+<p align="center"><em>A swarm of AI agents, drilling through your dev backlog.</em></p>
 
-Не набор инструментов, а **фабрика повторяемой разработки** с blueprint-пайплайнами, роутингом задач по приоритету и постоянной памятью проекта.
+<p align="center">
+  <img src="https://img.shields.io/badge/built%20by-AI%20only-yellow?style=flat-square&logo=openai" alt="Built by AI"/>
+  <img src="https://img.shields.io/badge/tested%20by-AI%20only-yellow?style=flat-square" alt="Tested by AI"/>
+  <img src="https://img.shields.io/badge/maintained%20by-AI%20only-yellow?style=flat-square" alt="Maintained by AI"/>
+  <img src="https://img.shields.io/badge/vibe-fun%20experiment-black?style=flat-square" alt="Fun experiment"/>
+  <img src="https://img.shields.io/badge/shell-bash-89e051?style=flat-square&logo=gnubash" alt="Bash"/>
+</p>
 
 ---
 
-## Архитектура системы
+> **⚠️ Fair warning:** Hive Drill is a **fun side project** built entirely by neural networks —
+> designed, coded, tested, debugged, and documented by AI agents with minimal human
+> intervention. It exists because we wanted to see how far a self-directed AI swarm
+> could go when given a clear mission and a pile of shell scripts.
+> Expect rough edges. That's part of the experiment.
+
+---
+
+## What is Hive Drill?
+
+Hive Drill is a **self-improving AI development pipeline** — a production-grade shell toolkit
+that coordinates multiple AI agents (Claude Code, Codex) to take a task from idea to merged PR
+through 7 automated stages. One instance of Hive Drill can work on another instance of itself,
+pick up GitHub issues, and close the loop autonomously.
+
+Think of it as a **beehive for software development**: each agent has a role, they operate in
+isolated git worktrees, share a knowledge vault, and keep improving the hive itself.
+
+```
+Idea (brief.md)
+  → Stage 1: Architectural plan        [⏸ human gate]
+    → Stage 2: Task breakdown
+      → Stage 3: Isolated code execution (Codex in git worktree)
+        → Stage 4: Automated verification (lint + tests + secrets)
+          → Stage 5: Narrative review   [⏸ human gate]
+            → Stage 6: PR packaging
+```
+
+---
+
+## System architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  UI-слой          Cursor (редактор, ревью, ручная коррекция) │
+│  UI layer        Cursor / editor + Obsidian vault           │
 ├─────────────────────────────────────────────────────────────┤
-│  Orchestration    Warp / Oz (терминал, pipeline runner, CI)  │
+│  Orchestration   scripts/go.sh — 7-stage pipeline runner    │
 ├─────────────────────────────────────────────────────────────┤
-│  Агенты           Claude Code (архитект) │ Codex (исполнитель)│
+│  Agents          Claude Code (architect) │ Codex (executor) │
 ├─────────────────────────────────────────────────────────────┤
-│  Tool-bus         MCP (GitHub, Linear, Postgres, Browser...) │
+│  Tool-bus        MCP (GitHub, Linear, Postgres, Browser...) │
 ├─────────────────────────────────────────────────────────────┤
-│  Blueprints       .ai/ (пайплайны, скиллы, память, раны)    │
+│  Blueprints      .ai/blueprints/ — pipeline templates       │
 ├─────────────────────────────────────────────────────────────┤
-│  Local LLM        llm/ (Harbor + TabbyAPI + llama.cpp)       │
+│  Local LLM       llm/ — Harbor + TabbyAPI + llama.cpp       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Роли агентов
-
-| Агент | Роль | Приоритеты |
-|-------|------|-----------|
-| **Claude Code** | Архитектор, длинный мыслитель | P0: critical, P1: plan+review |
-| **Codex** | Исполнитель, быстрый инженер | P1: implementation, P2: routine |
-| **Cursor** | Кабина пилота, ревью, ручная коррекция | все |
-| **Warp/Oz** | Диспетчерская, pipeline runner | all automation |
-| **Local LLM** | Локальный backend для P2/P3 задач | P2: routine, P3: background |
-
-## Маршрутизация задач
-
-| Приоритет | Тип задачи | Агент | Модель |
-|-----------|-----------|-------|--------|
-| **P0** critical | security, migration, architecture | Claude Code | opus/opusplan |
-| **P1** standard | feature, refactor, integration | Claude Sonnet + Codex cloud | cloud-medium |
-| **P2** routine | boilerplate, docs, simple tests | Codex local | local-fast |
-| **P3** background | triage, changelogs, search | Codex local | local-cheap |
-
-## Структура проекта
-
-```
-.ai/
-  base/          — канон: правила, архитектура, критерии done
-  blueprints/    — шаблоны пайплайнов (feature, bugfix, refactor, review, release)
-  skills/        — переиспользуемые micro-workflow
-  pipelines/     — YAML-пайплайны для Oz/CI
-  routing/       — policy маршрутизации задач
-  runs/          — артефакты каждого прогона (.gitignore)
-  evals/         — золотые тесты для blueprint'ов
-.codex/          — config.toml (cloud + local профили)
-.cursor/rules/   — editor-specific правила
-.claude/         — settings, skills Claude Code
-mcp/             — конфигурация MCP серверов
-scripts/         — ai-check, blueprint-run, plan-init, package-pr
-llm/             — локальный LLM стек (Harbor + TabbyAPI + llama.cpp)
-tests/           — тесты для всех скриптов (встроенный runner, без зависимостей)
-vault/           — Obsidian workspace (briefs, канбан, docs, canvas)
-```
+| Agent | Role | Priority |
+|-------|------|----------|
+| **Claude Code** | Architect, long-horizon thinker | P0: critical, P1: plan + review |
+| **Codex** | Executor, fast engineer | P1: implementation, P2: routine |
+| **Local LLM** | Background worker | P2: routine, P3: triage |
 
 ---
 
-## Быстрый старт
+## Quick start
 
-### 1. Инициализация системы
+### 1. Bootstrap
 
 ```bash
+git clone <repo-url> hive-drill
+cd hive-drill
 ./scripts/init.sh --all
 ```
 
-Скрипт: проверит зависимости, скопирует `.env.example` → `.env`, настроит MCP, проверит локальный LLM стек.
-
-### 2. Запустить локальный LLM
+### 2. Register a project
 
 ```bash
-just llm-up              # TabbyAPI + кодер 7B
-# или
-./llm/setup/install.sh   # первая установка
+# Point Hive Drill at any repo you want to work on
+just project add myapp /path/to/myapp "Short description"
+just project switch myapp
 ```
 
-### 3. Создать и запустить задачу
+### 3. Create and run a task
 
 ```bash
-# Создать brief задачи
+# Create a brief (fills template in Obsidian vault)
 just new FEAT-001
 
-# Заполнить vault/00-inbox/FEAT-001.md, изменить status: draft → status: ready
+# Edit vault/projects/myapp/00-inbox/FEAT-001.md
+# Change:  status: draft  →  status: ready
 
-# Запустить полный pipeline (Plan → Code → Tests → Review → PR)
+# Fire the full pipeline
 just go FEAT-001
-
-# Или с конкретной стадии (0-6)
-just go-from FEAT-001 3
 ```
 
-### 4. Быстрые проверки
+### 4. Self-improve mode
 
 ```bash
-just status              # статус агентов и сервисов
-just check               # ai-check.sh (lint + tests + secrets)
-bash tests/run_tests.sh  # тесты самих скриптов
+# Let Hive Drill work on itself
+just self init --repo git@github.com:you/hive-drill.git --github you/hive-drill
+
+# Browse GitHub issues, pick what to work on
+just issues
+
+# After the pipeline finishes — commit, push, pull self
+just self sync
 ```
 
 ---
 
-## Жизненный цикл pipeline
+## Pipeline stages
 
-```
-Intake (brief.md)
-  → Architectural pass — Claude Code (plan.md)       [⏸ Gate: human approve]
-    → Task slicing — Claude / Cursor (tasks.md)
-      → Isolated execution — Codex в worktree (код)
-        → Verification — scripts/ai-check.sh (test-report.md)
-          → Narrative review — Claude Code (findings.md)   [⏸ Gate: human approve]
-            → PR packaging — Codex/Cursor (pr-body.md)
-              → Retro → обновление BASE.md / blueprints
-```
-
-### Стадии pipeline
-
-| # | Стадия | Агент | Артефакт | Гейт |
-|---|--------|-------|----------|------|
-| 0 | Brief  | Human | `brief.md` | — |
-| 1 | Plan   | Claude | `plan.md` | ⏸ y/n/e |
-| 2 | Tasks  | Claude | `tasks.md` | — |
-| 3 | Code   | Codex | изменения в worktree | — |
-| 4 | Tests  | scripts | `test-report.md` | — |
-| 5 | Review | Claude | `findings.md` | ⏸ y/n/e |
-| 6 | PR     | scripts | `pr-body.md` | — |
+| # | Stage | Agent | Artifact | Gate |
+|---|-------|-------|----------|------|
+| 0 | Brief | Human | `brief.md` | — |
+| 1 | Plan | Claude Code | `plan.md` | ⏸ y/n/e |
+| 2 | Tasks | Claude Code | `tasks.md` | — |
+| 3 | Code | Codex | changes in worktree | — |
+| 4 | Tests | scripts | `test-report.md` | — |
+| 5 | Review | Claude Code | `findings.md` | ⏸ y/n/e |
+| 6 | PR | scripts | `pr-body.md` | — |
 
 ---
 
-## Тестирование
+## Project structure
 
-Все скрипты покрыты тестами. Тестовый фреймворк встроен, внешних зависимостей нет.
-
-```bash
-# Запустить все тесты
-bash tests/run_tests.sh
-
-# Запустить только нужные суиты
-bash tests/run_tests.sh gate canvas worktree
 ```
-
-| Файл теста | Покрывает |
-|------------|-----------|
-| `test_new.sh` | `scripts/new.sh` — создание задачи |
-| `test_gate.sh` | `scripts/gate.sh` — ворота одобрения |
-| `test_ai_check.sh` | `scripts/ai-check.sh` — проверочный шлюз |
-| `test_canvas.sh` | `scripts/canvas-add.sh`, `canvas-move.sh` |
-| `test_plan_init.sh` | `scripts/plan-init.sh` — инициализация рана |
-| `test_worktree.sh` | `scripts/worktree.sh` — git worktrees |
-| `test_package_pr.sh` | `scripts/package-pr.sh` — PR packaging |
-| `test_go_pipeline.sh` | `scripts/go.sh` — интеграционный тест всего pipeline |
-| `test_canvas_arch.sh` | `scripts/canvas-arch.sh` — генерация архитектурной схемы |
-| `test_status.sh` | `scripts/status.sh` — статус системы |
-
----
-
-## GSD (get-shit-done) интеграция
-
-[GSD](https://github.com/gsd-build/get-shit-done) уже установлен глобально в `~/.claude/hooks/` (v1.30+).
-Работает прозрачно для всех сессий Claude Code.
-
-**Что GSD добавляет:**
-
-| Hook | Функция |
-|------|---------|
-| `gsd-context-monitor` | Предупреждает агента при context window < 35% / 25% |
-| `gsd-prompt-guard` | Защищает `.planning/` от prompt injection |
-| `gsd-statusline` | Statusline: модель · context% · директория |
-| `gsd-check-update` | Проверяет обновления при старте сессии |
-
-**Совместимость с AI Dev OS**: GSD работает на уровне Claude Code хуков, AI Dev OS — на уровне pipeline-оркестрации. Системы дополняют друг друга и не конфликтуют.
-
-Если хочешь использовать GSD `.planning/` convention в этом проекте, добавь в `.gitignore`:
-```
-.planning/
+.ai/
+  base/          — canonical rules, architecture, done criteria
+  blueprints/    — pipeline templates (feature, bugfix, refactor, review, release)
+  projects/      — project registry (<name>.json), committed
+  runs/          — run artifacts: runs/<project>/<TASK-ID>/
+scripts/
+  go.sh          — pipeline orchestrator (7 stages)
+  new.sh         — task brief creator
+  project.sh     — project registry manager
+  self.sh        — self-improvement workflow
+  issues.sh      — GitHub issues → Claude analysis → fzf picker → pipeline
+  canvas-arch.sh — auto-generate architecture canvas + docs
+  gate.sh        — interactive human approval gates
+  ai-check.sh    — done criterion: lint + tests + secrets
+vault/
+  projects/      — per-project Obsidian workspace (inbox/active/done/canvas)
+  canvas/        — global kanban board
+llm/             — local LLM stack (Harbor + TabbyAPI + llama.cpp)
+mcp/             — MCP server configuration
+tests/           — test suite (zero external dependencies)
 ```
 
 ---
 
-## Локальный LLM
-
-Подробнее: [llm/README.md](llm/README.md)
-
-RTX 4070 (12 GB VRAM) — рекомендуемый стек: Harbor + TabbyAPI + EXL2.
+## Commands
 
 ```bash
-cd llm
-./setup/install.sh
-./models/download-coder.sh
-./profiles/tabbyapi-coder.sh
+just help               # Full command reference
+just --list             # Quick recipe list
+
+just new  <ID>          # Create task brief
+just go   <ID>          # Run full pipeline
+just go-from <ID> <N>   # Resume from stage N
+
+just project add <name> <path>   # Register project
+just project switch <name>       # Switch active project
+
+just self init          # Clone self into workspace/roi-dev/
+just self sync          # Commit+push workspace, pull self
+
+just issues             # Browse GitHub issues → pipeline
+just issues list        # List + Claude analysis
+just issues run 42 7    # Run pipeline for specific issues
+
+just arch               # Generate architecture canvas
+just status             # System status (agents, LLM, MCP)
+just check              # Full done-check (lint+tests+secrets)
+
+just completions        # Install shell completions (bash/zsh/fish)
+just man                # Open just man page
 ```
 
-Переключение профилей:
+---
+
+## Testing
+
+All scripts are covered by a built-in test runner — zero external dependencies.
+
 ```bash
-./scripts/switch-model.sh coder    # Qwen2.5-Coder 7B (daily)
-./scripts/switch-model.sh writer   # Qwen2.5 14B (docs, ТЗ)
-./scripts/switch-model.sh llamacpp # fallback
+bash tests/run_tests.sh          # Run all tests
+bash tests/run_tests.sh gate     # Run specific suite
+just check                       # Full quality gate
 ```
+
+---
+
+## Local LLM (optional)
+
+RTX 4070 (12 GB VRAM) recommended stack: Harbor + TabbyAPI + EXL2.
+
+```bash
+just llm-up       # TabbyAPI + Qwen2.5-Coder 7B (daily coding)
+just llm-writer   # TabbyAPI + Qwen2.5 14B (docs, planning)
+just llm-test     # Verify endpoint
+just llm-tunnel   # Cloudflare tunnel for remote access
+```
+
+---
+
+## Dependencies
+
+| Tool | Required | Purpose |
+|------|----------|---------|
+| `bash` 5.x | ✅ | Everything |
+| `just` | ✅ | Task runner |
+| `claude` CLI | ✅ | Architect agent |
+| `codex` CLI | ✅ | Executor agent |
+| `python3` | ✅ | Canvas generation (stdlib only) |
+| `gh` CLI | ✅ for issues | GitHub issues workflow |
+| `fzf` | ✅ for issues | Interactive picker |
+| `git` | ✅ | Worktrees, self-update |
+| Harbor + TabbyAPI | optional | Local LLM |
+| Obsidian | optional | Vault visualization |
+
+Install everything:
+```bash
+just setup
+just completions   # → shell tab completion for all just commands
+```
+
+---
+
+## The experiment
+
+This project answers one question: **can a swarm of AI agents build and maintain
+a non-trivial software tool with minimal human direction?**
+
+Rules of the experiment:
+- No human writes code directly
+- All changes go through the pipeline
+- AI agents write the tests and run them
+- Self-improvement is the end goal: `just issues` → `just self sync` → repeat
+
+Current status: **ongoing**. The hive is active.
+
+---
+
+## License
+
+MIT — do whatever you want with it. It was made by robots anyway.
+
+---
+
+<p align="center">
+  <sub>🐝 Hive Drill — because why debug manually when you have a swarm?</sub>
+</p>

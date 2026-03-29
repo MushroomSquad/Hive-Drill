@@ -22,14 +22,21 @@ describe "new.sh — task creation"
 setup_workspace
 
 # Build a fake project tree in TEST_REPO
-VAULT="${TEST_REPO}/vault"
-mkdir -p "${VAULT}/templates" "${VAULT}/00-inbox"
-cp "${PROJECT_ROOT}/vault/templates/brief.md" "${VAULT}/templates/brief.md"
+TEST_PROJECT="testproj"
+VAULT="${TEST_REPO}/vault/projects/${TEST_PROJECT}"
+mkdir -p "${VAULT}/templates" "${VAULT}/00-inbox" "${VAULT}/canvas"
+cp "${PROJECT_ROOT}/vault/templates/brief.md" "${TEST_REPO}/vault/templates/brief.md"
+echo '{"nodes":[],"edges":[]}' > "${VAULT}/canvas/project-board.canvas"
 mkdir -p "${TEST_REPO}/scripts"
 cp "${PROJECT_ROOT}/scripts/new.sh" "${TEST_REPO}/scripts/new.sh"
 cp "${PROJECT_ROOT}/scripts/canvas-add.sh" "${TEST_REPO}/scripts/canvas-add.sh"
-mkdir -p "${VAULT}/canvas"
-echo '{"nodes":[],"edges":[]}' > "${VAULT}/canvas/project-board.canvas"
+cp "${PROJECT_ROOT}/scripts/project.sh" "${TEST_REPO}/scripts/project.sh"
+
+# Register and activate the test project
+mkdir -p "${TEST_REPO}/.ai/projects" "${TEST_REPO}/.ai/state"
+echo "{\"name\":\"${TEST_PROJECT}\",\"path\":\"${TEST_REPO}\",\"description\":\"test\",\"added\":\"2026-01-01\"}" \
+    > "${TEST_REPO}/.ai/projects/${TEST_PROJECT}.json"
+echo -n "${TEST_PROJECT}" > "${TEST_REPO}/.ai/state/current"
 
 # Mock EDITOR so it doesn't open anything
 export EDITOR="true"
@@ -42,11 +49,11 @@ code=$?
 it "exits 0 for a fresh task"
 assert_exit_ok $code
 
-it "creates brief file in vault/00-inbox/"
+it "creates brief file in vault/projects/<project>/00-inbox/"
 assert_file_exists "${VAULT}/00-inbox/${TASK_ID}.md"
 
-it "creates .ai/runs/<TASK-ID>/ directory"
-assert_dir_exists "${TEST_REPO}/.ai/runs/${TASK_ID}"
+it "creates .ai/runs/<project>/<TASK-ID>/ directory"
+assert_dir_exists "${TEST_REPO}/.ai/runs/${TEST_PROJECT}/${TASK_ID}"
 
 it "brief contains task_id in frontmatter"
 assert_file_contains "${VAULT}/00-inbox/${TASK_ID}.md" "${TASK_ID}"
@@ -68,6 +75,16 @@ assert_exit_fail $code2
 
 it "prints 'already exists' message on duplicate"
 assert_contains "already exists" "$output2"
+
+describe "new.sh — requires active project"
+
+rm -f "${TEST_REPO}/.ai/state/current"
+it "exits non-zero when no active project"
+output3=$(cd "${TEST_REPO}" && bash scripts/new.sh "TEST-002" 2>&1); code3=$?
+assert_exit_fail $code3
+
+it "prints helpful error when no active project"
+assert_contains "No active project" "$output3"
 
 teardown_workspace
 print_summary

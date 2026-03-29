@@ -133,3 +133,9 @@ git add -p && git commit -m "refactor: <описание шага>"
   findings.md
   pr-body.md
 ```
+
+---
+
+## Writing standards
+
+После написания каждого документа — `/humanize`. См. BASE.md § Writing standards.

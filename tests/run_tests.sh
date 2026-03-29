@@ -23,6 +23,7 @@ ALL_TESTS=(
     test_go_pipeline
     test_canvas_arch
     test_status
+    test_project
 )
 
 if [[ $# -gt 0 ]]; then

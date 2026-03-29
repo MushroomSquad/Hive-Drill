@@ -20,10 +20,24 @@ TASK_ID="$1"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-VAULT="${PROJECT_ROOT}/vault"
-TEMPLATE="${VAULT}/templates/brief.md"
+
+# ─── Project context ──────────────────────────────────────────────────────────
+source "${SCRIPT_DIR}/project.sh" 2>/dev/null || true
+ACTIVE_PROJECT="${ACTIVE_PROJECT:-}"
+roi_project_context 2>/dev/null || true
+
+if [[ -z "${ACTIVE_PROJECT}" ]]; then
+    echo -e "${RED}Error:${RESET} No active project."
+    echo -e "  Set one first: ${CYAN}just project switch <name>${RESET}"
+    echo -e "  Or register:   ${CYAN}just project add <name> <path>${RESET}"
+    exit 1
+fi
+
+VAULT="${PROJECT_ROOT}/vault/projects/${ACTIVE_PROJECT}"
+RUN_DIR="${PROJECT_ROOT}/.ai/runs/${ACTIVE_PROJECT}/${TASK_ID}"
+
+TEMPLATE="${PROJECT_ROOT}/vault/templates/brief.md"
 INBOX="${VAULT}/00-inbox"
-RUN_DIR="${PROJECT_ROOT}/.ai/runs/${TASK_ID}"
 
 # ─── Validate ─────────────────────────────────────────────────────────────────
 if [[ ! -f "${TEMPLATE}" ]]; then
@@ -96,13 +110,14 @@ if [[ -n "${EDITOR:-}" ]]; then
 else
     echo -e "${YELLOW}Tip:${RESET} Set \$EDITOR to open files automatically."
     echo ""
-    echo -e "  Open in Obsidian: ${BOLD}vault/00-inbox/${TASK_ID}.md${RESET}"
+    local_path="${VAULT#${PROJECT_ROOT}/}"
+    echo -e "  Open in Obsidian: ${BOLD}${local_path}/00-inbox/${TASK_ID}.md${RESET}"
 fi
 
 # ─── Next step prompt ─────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}Next steps:${RESET}"
-echo -e "  1. Заполни brief в файле: vault/00-inbox/${TASK_ID}.md"
+echo -e "  1. Заполни brief в файле: ${VAULT#${PROJECT_ROOT}/}/00-inbox/${TASK_ID}.md"
 echo -e "  2. Смени \`status: draft\` → \`status: ready\`"
 echo -e "  3. Запусти pipeline: ${CYAN}${BOLD}just go ${TASK_ID}${RESET}"
 echo ""

@@ -40,5 +40,8 @@ If I discover a P0 issue (security flaw, data migration risk, unclear architectu
 2. Write a findings note in `.ai/runs/<TASK-ID>/findings.md`
 3. Ask the human for direction before proceeding
 
+## Writing standards
+After writing any `.md` artifact (`plan.md`, `findings.md`, `pr-body.md`) or code comments — run `/humanize` on the text before finalizing. See BASE.md § Writing standards for details.
+
 ## Memory updates
 After every completed pipeline run, check if BASE.md, blueprints, or skills need to be updated based on what was learned. Propose updates explicitly — don't silently modify them.

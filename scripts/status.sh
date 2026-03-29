@@ -2,7 +2,9 @@
 # Статус всей системы: агенты, LLM, активные runs
 set -uo pipefail
 
-CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; BOLD='\033[1m'; NC='\033[0m'
 section() { echo ""; echo -e "${CYAN}=== $* ===${NC}"; }
 ok()      { echo -e "  ${GREEN}●${NC} $*"; }
 warn()    { echo -e "  ${YELLOW}○${NC} $*"; }
@@ -11,6 +13,25 @@ off()     { echo -e "  ${RED}✗${NC} $*"; }
 echo "╔════════════════════════════════════╗"
 echo "║       AI Dev OS — Status          ║"
 echo "╚════════════════════════════════════╝"
+
+# ── Активный проект ──────────────────────────────────────────────────
+source "${SCRIPT_DIR}/project.sh" 2>/dev/null || true
+ACTIVE_PROJECT="${ACTIVE_PROJECT:-}"
+roi_project_context 2>/dev/null || true
+
+section "Active Project"
+if [[ -n "${ACTIVE_PROJECT}" ]]; then
+    ok "${BOLD}${ACTIVE_PROJECT}${NC}"
+    [[ -n "${PROJECT_PATH:-}" ]] && echo -e "    Path:  ${PROJECT_PATH}"
+    echo -e "    Vault: vault/projects/${ACTIVE_PROJECT}/"
+    echo -e "    Runs:  .ai/runs/${ACTIVE_PROJECT}/"
+else
+    off "No active project — pipeline commands will fail"
+    echo -e "    Fix: ${CYAN}just project switch <name>${NC}"
+    _list_project_names 2>/dev/null | while IFS= read -r n; do
+        [[ -n "$n" ]] && echo -e "    · $n"
+    done
+fi
 
 # ── Агенты ──────────────────────────────────────────────────────────
 section "Agents"
@@ -74,8 +95,10 @@ fi
 
 # ── Активные runs ────────────────────────────────────────────────────
 section "Active Runs"
-if [ -d .ai/runs ]; then
-  RUNS=$(find .ai/runs -maxdepth 1 -mindepth 1 -type d | sort -r | head -5)
+RUNS_DIR=".ai/runs"
+[[ -n "${ACTIVE_PROJECT}" ]] && RUNS_DIR=".ai/runs/${ACTIVE_PROJECT}"
+if [ -d "${RUNS_DIR}" ]; then
+  RUNS=$(find "${RUNS_DIR}" -maxdepth 1 -mindepth 1 -type d | sort -r | head -5)
   if [ -z "$RUNS" ]; then
     warn "Нет активных runs"
   else

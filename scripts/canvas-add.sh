@@ -14,7 +14,18 @@ TITLE="${4:-}"
 LANE="${5:-backlog}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CANVAS="${SCRIPT_DIR}/../vault/canvas/project-board.canvas"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# ─── Project context ──────────────────────────────────────────────────────────
+source "${SCRIPT_DIR}/project.sh" 2>/dev/null || true
+ACTIVE_PROJECT="${ACTIVE_PROJECT:-}"
+roi_project_context 2>/dev/null || true
+
+if [[ -n "${ACTIVE_PROJECT}" ]]; then
+    CANVAS="${PROJECT_ROOT}/vault/projects/${ACTIVE_PROJECT}/canvas/project-board.canvas"
+else
+    CANVAS="${PROJECT_ROOT}/vault/canvas/project-board.canvas"
+fi
 
 [[ -f "$CANVAS" ]] || { echo "[canvas] Canvas не найден: $CANVAS"; exit 0; }
 

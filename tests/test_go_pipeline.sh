@@ -14,14 +14,30 @@ setup_pipeline_workspace() {
     mkdir -p "${TEST_REPO}/scripts"
     cp "${PROJECT_ROOT}/scripts/"*.sh "${TEST_REPO}/scripts/"
     chmod +x "${TEST_REPO}/scripts/"*.sh
-    # Vault structure
-    VAULT="${TEST_REPO}/vault"
+
+    # Active project context (required by go.sh project system)
+    TEST_PROJECT="testproject"
+    mkdir -p "${TEST_REPO}/.ai/state"
+    echo "${TEST_PROJECT}" > "${TEST_REPO}/.ai/state/current"
+    export ACTIVE_PROJECT="${TEST_PROJECT}"
+
+    # Project registry — empty path so go.sh falls through to WORKSPACE/.env
+    mkdir -p "${TEST_REPO}/.ai/projects"
+    printf '{"name":"%s","path":"","description":"test"}\n' \
+        "${TEST_PROJECT}" \
+        > "${TEST_REPO}/.ai/projects/${TEST_PROJECT}.json"
+
+    # Vault structure — project-namespaced (mirrors go.sh path logic)
+    VAULT="${TEST_REPO}/vault/projects/${TEST_PROJECT}"
     mkdir -p "${VAULT}/00-inbox" "${VAULT}/01-active" "${VAULT}/02-done" "${VAULT}/templates" "${VAULT}/canvas"
-    cp "${PROJECT_ROOT}/vault/templates/plan.md" "${VAULT}/templates/plan.md"
+    cp "${PROJECT_ROOT}/vault/templates/plan.md" "${VAULT}/templates/plan.md" 2>/dev/null || true
     cp "${PROJECT_ROOT}/vault/templates/findings.md" "${VAULT}/templates/findings.md" 2>/dev/null || true
     echo '{"nodes":[],"edges":[]}' > "${VAULT}/canvas/project-board.canvas"
-    export VAULT
+    export VAULT TEST_PROJECT
 }
+
+# Shorthand for project-namespaced run dir
+run_dir() { echo "${TEST_REPO}/.ai/runs/${TEST_PROJECT}/${1}"; }
 
 describe "go.sh — argument validation"
 
@@ -72,6 +88,10 @@ describe "go.sh — stage 1 to 6 with mocked agents"
 # Update brief to ready
 sed -i 's/status: draft/status: ready/' "${VAULT}/00-inbox/${TASK_ID}.md"
 
+# Set up a dummy workspace so guard_workspace doesn't trigger
+mkdir -p "${TEST_REPO}/workspace/testapp"
+echo "WORKSPACE=workspace/testapp" > "${TEST_REPO}/.env"
+
 # Mock external tools in TEST_MOCK_BIN and prepend to PATH
 prepend_mock_bin
 
@@ -106,19 +126,19 @@ it "brief passes through 01-active/ stage (checked via 02-done/)"
 assert_file_exists "${VAULT}/02-done/${TASK_ID}.md"
 
 it "creates run directory with artifacts"
-assert_dir_exists "${TEST_REPO}/.ai/runs/${TASK_ID}"
+assert_dir_exists "$(run_dir ${TASK_ID})"
 
 it "generates plan.md"
-assert_file_exists "${TEST_REPO}/.ai/runs/${TASK_ID}/plan.md"
+assert_file_exists "$(run_dir ${TASK_ID})/plan.md"
 
 it "generates tasks.md"
-assert_file_exists "${TEST_REPO}/.ai/runs/${TASK_ID}/tasks.md"
+assert_file_exists "$(run_dir ${TASK_ID})/tasks.md"
 
 it "generates test-report.md"
-assert_file_exists "${TEST_REPO}/.ai/runs/${TASK_ID}/test-report.md"
+assert_file_exists "$(run_dir ${TASK_ID})/test-report.md"
 
 it "generates findings.md"
-assert_file_exists "${TEST_REPO}/.ai/runs/${TASK_ID}/findings.md"
+assert_file_exists "$(run_dir ${TASK_ID})/findings.md"
 
 it "prints Pipeline complete message"
 assert_contains "Pipeline complete" "$output"
@@ -126,8 +146,8 @@ assert_contains "Pipeline complete" "$output"
 describe "go.sh — --from-stage flag"
 
 TASK_ID2="PIPE-002"
-mkdir -p "${TEST_REPO}/.ai/runs/${TASK_ID2}"
-cat > "${TEST_REPO}/.ai/runs/${TASK_ID2}/brief.md" <<'EOF'
+mkdir -p "$(run_dir ${TASK_ID2})"
+cat > "$(run_dir ${TASK_ID2})/brief.md" <<'EOF'
 ---
 task_id: PIPE-002
 status: ready
@@ -137,7 +157,7 @@ status: ready
 Skip to review.
 EOF
 
-cat > "${TEST_REPO}/.ai/runs/${TASK_ID2}/plan.md" <<'EOF'
+cat > "$(run_dir ${TASK_ID2})/plan.md" <<'EOF'
 ---
 task_id: PIPE-002
 status: approved
@@ -189,7 +209,7 @@ it "detects package.json in workspace (not in roi root)"
 assert_contains "npm" "$output3"
 
 it "still writes run artifacts to .ai/runs/ inside roi"
-assert_file_exists "${TEST_REPO}/.ai/runs/${TASK_ID3}/plan.md"
+assert_file_exists "$(run_dir ${TASK_ID3})/plan.md"
 
 teardown_workspace
 print_summary
