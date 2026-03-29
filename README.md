@@ -283,5 +283,6 @@ MIT — do whatever you want with it. It was made by robots anyway.
 ---
 
 <p align="center">
-  <sub>🐝 Hive Drill — because why debug manually when you have a swarm?</sub>
+  <sub>🐝 Hive Drill — because why debug manually when you have a swarm?</sub><br>
+  <sub>Made with 🍄 by MushroomSquad</sub>
 </p>
