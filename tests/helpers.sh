@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # tests/helpers.sh — Shared test utilities (no external dependencies)
 
+# ─── Cross-platform sed -i ─────────────────────────────────────────────────────
+_HELPERS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../scripts/detect-platform.sh
+source "${_HELPERS_DIR}/../scripts/detect-platform.sh"
+unset _HELPERS_DIR
+
 # ─── Colors ───────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'
 BOLD='\033[1m'; RESET='\033[0m'

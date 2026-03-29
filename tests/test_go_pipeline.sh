@@ -86,7 +86,7 @@ assert_contains "draft" "$output2"
 describe "go.sh — stage 1 to 6 with mocked agents"
 
 # Update brief to ready
-sed -i 's/status: draft/status: ready/' "${VAULT}/00-inbox/${TASK_ID}.md"
+${HIVE_SED_I} 's/status: draft/status: ready/' "${VAULT}/00-inbox/${TASK_ID}.md"
 
 # Set up a dummy workspace so guard_workspace doesn't trigger
 mkdir -p "${TEST_REPO}/workspace/testapp"

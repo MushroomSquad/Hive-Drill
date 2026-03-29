@@ -47,7 +47,7 @@ assert_file_contains "${ARTIFACT}" "status: approved"
 
 it "rejects when user inputs 'n'"
 # Reset status
-sed -i 's/status: approved/status: draft/' "${ARTIFACT}"
+${HIVE_SED_I} 's/status: approved/status: draft/' "${ARTIFACT}"
 echo "n" | "${GATE_SH}" plan "${ARTIFACT}" > /dev/null 2>&1; code=$?
 assert_exit_fail $code
 
