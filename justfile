@@ -143,14 +143,10 @@ clone url name="project":
     #!/usr/bin/env bash
     mkdir -p workspace
     git clone "{{url}}" "workspace/{{name}}"
+    source "$(dirname "$0")/scripts/detect-platform.sh"
     if [ -f .env ]; then
         if grep -q "^WORKSPACE=" .env; then
-            python3 -c "
-import re, sys
-p='.env'
-t=open(p).read()
-open(p,'w').write(re.sub(r'^WORKSPACE=.*','WORKSPACE=workspace/{{name}}',t,flags=re.M))
-"
+            ${HIVE_SED_I} "s|^WORKSPACE=.*|WORKSPACE=workspace/{{name}}|" .env
         else
             echo "WORKSPACE=workspace/{{name}}" >> .env
         fi
