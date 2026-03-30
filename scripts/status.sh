@@ -11,7 +11,7 @@ warn()    { echo -e "  ${YELLOW}○${NC} $*"; }
 off()     { echo -e "  ${RED}✗${NC} $*"; }
 
 echo "╔════════════════════════════════════╗"
-echo "║       AI Dev OS — Status          ║"
+echo "║       Hive Drill — Status         ║"
 echo "╚════════════════════════════════════╝"
 
 # ── Active project ──────────────────────────────────────────────────

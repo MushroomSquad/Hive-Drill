@@ -34,7 +34,7 @@ fi
 
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}║       AI Dev OS — Test Suite                 ║${RESET}"
+echo -e "${BOLD}║       Hive Drill — Test Suite                ║${RESET}"
 echo -e "${BOLD}╚══════════════════════════════════════════════╝${RESET}"
 echo ""
 

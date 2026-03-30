@@ -18,7 +18,7 @@ DOCS_DIR="${VAULT}/docs"
 DOCS_ONLY=false
 [[ "${1:-}" == "--docs" ]] && DOCS_ONLY=true
 
-# Resolve target project: explicit arg → active project → roi root
+# Resolve target project: explicit arg → active project → project root
 if [[ "${1:-}" == "--docs" || -z "${1:-}" ]]; then
     TARGET_PROJECT=""
     ACTIVE_PROJECT_NAME=""

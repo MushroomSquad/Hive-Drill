@@ -331,10 +331,10 @@ stage_plan() {
     local workspace_directive
     if [[ "${TARGET_ROOT}" != "${PROJECT_ROOT}" ]]; then
         workspace_directive="You are planning changes to the TARGET PROJECT at: ${TARGET_ROOT}
-Do NOT suggest changes to the AI Dev OS tool itself (at ${PROJECT_ROOT}).
+Do NOT suggest changes to the Hive Drill tool itself (at ${PROJECT_ROOT}).
 All implementation steps must modify files inside ${TARGET_ROOT}."
     else
-        workspace_directive="You are planning a meta-task on the AI Dev OS repo itself at: ${PROJECT_ROOT}"
+        workspace_directive="You are planning a meta-task on the Hive Drill repo itself at: ${PROJECT_ROOT}"
     fi
 
     local prompt
@@ -619,8 +619,8 @@ guard_workspace() {
         echo -e "${RED}${BOLD}┌─────────────────────────────────────────────────┐${RESET}"
         echo -e "${RED}${BOLD}│  ⚠  WARNING: No WORKSPACE set                   │${RESET}"
         echo -e "${RED}${BOLD}│                                                  │${RESET}"
-        echo -e "${RED}${BOLD}│  Codex will write code into THIS roi/ directory. │${RESET}"
-        echo -e "${RED}${BOLD}│  That means the AI Dev OS itself may be changed. │${RESET}"
+        echo -e "${RED}${BOLD}│  Codex will write code into THIS hive-drill/ dir. │${RESET}"
+        echo -e "${RED}${BOLD}│  That means Hive Drill itself may be changed.    │${RESET}"
         echo -e "${RED}${BOLD}│                                                  │${RESET}"
         echo -e "${RED}${BOLD}│  To target a real project:                       │${RESET}"
         echo -e "${RED}${BOLD}│    just clone <url> <name>                       │${RESET}"
@@ -630,7 +630,7 @@ guard_workspace() {
         if [[ ! -t 0 ]]; then
             die "WORKSPACE not set and stdin is not a terminal. Aborting to prevent self-modification."
         fi
-        read -r -p "$(echo -e "${RED}Continue anyway and modify roi/ itself? [yes/N]${RESET} ") " ans
+        read -r -p "$(echo -e "${RED}Continue anyway and modify hive-drill/ itself? [yes/N]${RESET} ") " ans
         if [[ "${ans}" != "yes" ]]; then
             die "Aborted. Set WORKSPACE in .env and re-run."
         fi
@@ -980,7 +980,7 @@ finalize() {
 
 # ─── Main pipeline ────────────────────────────────────────────────────────────
 echo ""
-echo -e "${BOLD}AI Dev OS Pipeline${RESET} — Task: ${CYAN}${BOLD}${TASK_ID}${RESET}"
+echo -e "${BOLD}Hive Drill Pipeline${RESET} — Task: ${CYAN}${BOLD}${TASK_ID}${RESET}"
 if [[ $FROM_STAGE -gt 0 ]]; then
     echo -e "  Starting from stage: ${FROM_STAGE}"
 fi

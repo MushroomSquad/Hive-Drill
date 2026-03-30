@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # issues.sh — GitHub issues manager with Claude analysis
 # Fetches open issues, analyzes them via Claude, lets user pick with fzf,
-# auto-generates briefs, and kicks off the roi pipeline for each selection.
+# auto-generates briefs, and kicks off the Hive Drill pipeline for each selection.
 #
 # Usage:
 #   ./scripts/issues.sh              — full flow: list → fzf select → pipeline
@@ -63,7 +63,7 @@ _analyze_issues() {
     info "${count} issues — running analysis..."
 
     claude --print --no-markdown \
-"Analyze these GitHub issues for the roi project (AI Dev OS — shell-based AI development pipeline toolkit).
+"Analyze these GitHub issues for the Hive Drill project (shell-based AI development pipeline toolkit).
 
 For EACH issue output EXACTLY one line in this format, nothing else:
 {number}|{type}|{priority}|{complexity}|{summary}
@@ -140,7 +140,7 @@ _pick_issues() {
 
     # Write issues to temp file for the preview script
     local tmp_json
-    tmp_json="$(mktemp /tmp/roi-issues-XXXX.json)"
+    tmp_json="$(mktemp /tmp/hive-drill-issues-XXXX.json)"
     echo "${issues_json}" > "${tmp_json}"
 
     local preview_cmd
@@ -216,7 +216,7 @@ _generate_brief() {
 
     local brief_content
     brief_content=$(claude --print --no-markdown \
-"Generate a brief.md for this GitHub issue. It will be processed by the roi AI Dev OS pipeline — a shell-based AI development toolkit. The work happens in the roi project itself (self-improvement).
+"Generate a brief.md for this GitHub issue. It will be processed by the Hive Drill pipeline — a shell-based AI development toolkit. The work happens in the Hive Drill project itself (self-improvement).
 
 Output ONLY the markdown, no explanations, no code fences around the whole file.
 
@@ -281,7 +281,7 @@ cmd_run() {
     local issue_numbers=("$@")
     [[ ${#issue_numbers[@]} -gt 0 ]] || { err "Provide numbers: just issues run 42 15 7"; exit 1; }
 
-    # Make roi-dev the active project so pipeline routes correctly
+    # Make hive-drill-dev the active project so pipeline routes correctly
     echo -n "${PROJECT_NAME}" > "${PROJECT_ROOT}/.ai/state/current"
 
     local issues_json

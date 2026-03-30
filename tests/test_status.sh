@@ -18,8 +18,8 @@ code=$?
 it "exits 0"
 assert_exit_ok $code
 
-it "prints AI Dev OS header"
-assert_contains "AI Dev OS" "$output"
+it "prints Hive Drill header"
+assert_contains "Hive Drill" "$output"
 
 it "prints Agents section"
 assert_contains "Agents" "$output"

@@ -196,7 +196,7 @@ just go-from <ID> <N>   # Resume from stage N
 just project add <name> <path>   # Register project
 just project switch <name>       # Switch active project
 
-just self init          # Clone self into workspace/roi-dev/
+just self init          # Clone self into workspace/hive-drill-dev/
 just self sync          # Commit+push workspace, pull self
 
 just issues             # Browse GitHub issues → pipeline

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# self.sh — roi self-improvement pipeline
-# Manages a second roi instance in workspace/roi-dev/ for self-directed development.
-# One roi instance improves another, pushes the result, then pulls itself.
+# self.sh — Hive Drill self-improvement pipeline
+# Manages a second Hive Drill instance in workspace/hive-drill-dev/ for self-directed development.
+# One Hive Drill instance improves another, pushes the result, then pulls itself.
 #
 # Usage:
 #   ./scripts/self.sh init [--repo <git-url>] [--github <owner/repo>]
-#   ./scripts/self.sh update   — git pull workspace/roi-dev
+#   ./scripts/self.sh update   — git pull workspace/hive-drill-dev
 #   ./scripts/self.sh status   — workspace + runs status
 #   ./scripts/self.sh sync     — commit+push workspace, then pull self
 
@@ -43,7 +43,7 @@ cmd_init() {
     done
 
     if [[ -z "$remote_url" ]]; then
-        echo -n "  Git remote URL (for cloning roi): "
+        echo -n "  Git remote URL (for cloning Hive Drill): "
         read -r remote_url
     fi
     if [[ -z "$github_repo" ]]; then
@@ -51,8 +51,8 @@ cmd_init() {
         read -r github_repo
     fi
 
-    local workspace_path="${PROJECT_ROOT}/workspace/roi-dev"
-    local project_name="roi-dev"
+    local workspace_path="${PROJECT_ROOT}/workspace/hive-drill-dev"
+    local project_name="hive-drill-dev"
 
     # Clone or update workspace
     if [[ -d "${workspace_path}/.git" ]]; then
@@ -82,7 +82,7 @@ PYEOF
     ok "Config saved: ${SELF_CONFIG}"
 
     # Register as project (reuses project.sh)
-    "${SCRIPT_DIR}/project.sh" add "${project_name}" "${workspace_path}" "roi self-improvement workspace"
+    "${SCRIPT_DIR}/project.sh" add "${project_name}" "${workspace_path}" "Hive Drill self-improvement workspace"
 
     # Switch to it so arch/docs go to the right vault
     "${SCRIPT_DIR}/project.sh" switch "${project_name}"
@@ -164,7 +164,7 @@ cmd_status() {
 }
 
 # ─── sync ─────────────────────────────────────────────────────────────────────
-# Commit + push workspace changes, then pull the operator (current roi).
+# Commit + push workspace changes, then pull the operator (current Hive Drill).
 
 cmd_sync() {
     _require_config
@@ -192,10 +192,10 @@ cmd_sync() {
     git -C "${workspace_path}" push
     ok "Workspace pushed."
 
-    # Pull current roi (operator becomes the improved version)
-    info "Pulling current roi (operator)..."
+    # Pull current Hive Drill (operator becomes the improved version)
+    info "Pulling current Hive Drill (operator)..."
     git -C "${PROJECT_ROOT}" pull
-    ok "Current roi updated."
+    ok "Current Hive Drill updated."
 
     echo ""
     ok "Cycle complete. Both instances synchronized."

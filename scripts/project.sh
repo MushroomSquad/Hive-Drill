@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# project.sh — Manage projects for AI Dev OS
+# project.sh — Manage projects for Hive Drill
 #
 # Usage (CLI):
 #   ./scripts/project.sh add <name> <path> [description]
@@ -227,7 +227,7 @@ cmd_current() {
     local current
     current="$(_read_current)"
     if [[ -z "$current" ]]; then
-        echo -e "  ${YELLOW}No active project.${RESET} Using roi/ root paths (legacy mode)."
+        echo -e "  ${YELLOW}No active project.${RESET} Using hive-drill/ root paths (legacy mode)."
         echo -e "  Switch: ${CYAN}just project switch <name>${RESET}"
     else
         echo -e "  Active: ${BOLD}$current${RESET}"

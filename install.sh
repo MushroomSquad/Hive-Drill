@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# AI Dev OS — Bootstrap installer
+# Hive Drill — Bootstrap installer
 #
 # Locally:
 #   bash install.sh
 #
 # From repository (after publication):
-#   curl -fsSL https://raw.githubusercontent.com/YOU/ai-dev-os/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/MushroomSquad/Hive-Drill/main/install.sh | bash
 #
 set -euo pipefail
 
@@ -35,7 +35,7 @@ nudge() { WARNINGS+=("$*"); }
 echo ""
 echo -e "${CYAN}${BOLD}"
 echo "  ╔═══════════════════════════════════════════╗"
-echo "  ║          AI Dev OS — Installer            ║"
+echo "  ║          Hive Drill — Installer           ║"
 echo "  ║   Cursor · Codex · Claude · Local LLM    ║"
 echo "  ╚═══════════════════════════════════════════╝"
 echo -e "${RESET}"
@@ -246,7 +246,7 @@ ok ".ai/runs/ ready"
 if git rev-parse --is-inside-work-tree &>/dev/null; then
   ok "git repository: $(git rev-parse --show-toplevel)"
 else
-  git init && git add -A && git commit -m "init: AI Dev OS" --quiet
+  git init && git add -A && git commit -m "init: Hive Drill" --quiet
   ok "git initialized"
 fi
 

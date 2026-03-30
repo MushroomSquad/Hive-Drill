@@ -33,9 +33,9 @@ g "  just project info [name]        " "Project details"
 g "  just project remove <name>      " "Remove from registry"
 
 echo ""
-h "  SELF-IMPROVE  (roi works on itself)"
+h "  SELF-IMPROVE  (Hive Drill works on itself)"
 ln
-g "  just self init                  " "Clone roi → workspace/roi-dev/"
+g "  just self init                  " "Clone Hive Drill → workspace/hive-drill-dev/"
 c "    --repo <git-url>              " "Git remote to clone from"
 c "    --github owner/repo           " "GitHub repo for issues"
 g "  just self update                " "git pull workspace"

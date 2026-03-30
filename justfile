@@ -160,7 +160,7 @@ workspace:
     #!/usr/bin/env bash
     source .env 2>/dev/null || true
     if [ -z "${WORKSPACE:-}" ]; then
-        echo "WORKSPACE not set — agents run in the roi/ root"
+        echo "WORKSPACE not set — agents run in the hive-drill/ root"
         echo "Clone a project: just clone <url> <name>"
     elif [ -d "${WORKSPACE}" ]; then
         echo "Workspace: ${WORKSPACE}"
@@ -176,7 +176,7 @@ open:
     #!/usr/bin/env bash
     source .env 2>/dev/null || true
     TARGET="${WORKSPACE:-$(pwd)}"
-    [ "${TARGET}" = "$(pwd)" ] && echo "Opening roi/ root" || echo "Opening: ${TARGET}"
+    [ "${TARGET}" = "$(pwd)" ] && echo "Opening hive-drill/ root" || echo "Opening: ${TARGET}"
     ${EDITOR:-code} "${TARGET}"
 
 # ─── Projects ────────────────────────────────────────────────────────

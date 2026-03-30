@@ -205,10 +205,10 @@ assert_exit_ok $code3
 it "prints Workspace path in header"
 assert_contains "workspace/myapp" "$output3"
 
-it "detects package.json in workspace (not in roi root)"
+it "detects package.json in workspace (not in hive-drill root)"
 assert_contains "npm" "$output3"
 
-it "still writes run artifacts to .ai/runs/ inside roi"
+it "still writes run artifacts to .ai/runs/ inside hive-drill"
 assert_file_exists "$(run_dir ${TASK_ID3})/plan.md"
 
 teardown_workspace

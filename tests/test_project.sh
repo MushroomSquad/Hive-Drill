@@ -7,7 +7,7 @@ source "${SCRIPT_DIR}/helpers.sh"
 
 PROJECT_SH="${PROJECT_ROOT}/scripts/project.sh"
 
-# ─── Setup: isolated temp roi root ────────────────────────────────────────────
+# ─── Setup: isolated temp project root ───────────────────────────────────────
 setup_workspace
 ROI="${TEST_REPO}"
 mkdir -p "${ROI}/scripts" "${ROI}/vault/canvas" "${ROI}/vault/templates"
@@ -136,7 +136,7 @@ assert_exit_fail $code
 
 describe "project.sh — no active project (legacy mode)"
 
-it "roi_project_context sets empty vars when no state file"
+it "project_context sets empty vars when no state file"
 rm -f "${ROI}/.ai/state/current"
 output=$(cd "${ROI}" && bash -c '
     source scripts/project.sh
