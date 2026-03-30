@@ -1,0 +1,80 @@
+{
+  "nodes": [
+    {
+      "id": "title",
+      "type": "text",
+      "text": "# hive-drill-dev\n```",
+      "x": 300,
+      "y": -80,
+      "width": 400,
+      "height": 60,
+      "color": "6"
+    },
+    {
+      "id": "stack",
+      "type": "text",
+      "text": "## 🔧 Tech Stack\n\n**Language:** unknown\n\n",
+      "x": 0,
+      "y": 20,
+      "width": 240,
+      "height": 160,
+      "color": "3"
+    },
+    {
+      "id": "dirs-group",
+      "type": "text",
+      "text": "## 📁 Structure\n\n`scripts/` █████ 22 files\n`llm/` ████ 17 files\n`tests/` ███ 13 files\n`vault/` ██ 7 files\n`mcp/` █ 1 files\n",
+      "x": 300,
+      "y": 60,
+      "width": 260,
+      "height": 170,
+      "color": "5"
+    },
+    {
+      "id": "readme",
+      "type": "text",
+      "text": "## 📖 README\n\n- What is Hive Drill?\n- System architecture\n- Quick start\n- Point Hive Drill at any repo you want to work on\n- Create a brief (fills template in Obsidian vault)\n- Edit vault/projects/myapp/00-inbox/FEAT-001.md\n- Change:  status: draft  →  status: ready\n- Fire the full pipeline",
+      "x": 620,
+      "y": 60,
+      "width": 220,
+      "height": 232,
+      "color": "4"
+    },
+    {
+      "id": "tests",
+      "type": "text",
+      "text": "## 🧪 Tests\n\n`tests/` — 13 files",
+      "x": 620,
+      "y": 320,
+      "width": 220,
+      "height": 100,
+      "color": "1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "n-zs6veo9f",
+      "fromNode": "stack",
+      "fromSide": "right",
+      "toNode": "dirs-group",
+      "toSide": "left",
+      "label": "depends"
+    },
+    {
+      "id": "n-1v8e55lw",
+      "fromNode": "dirs-group",
+      "fromSide": "right",
+      "toNode": "readme",
+      "toSide": "left",
+      "label": "docs"
+    },
+    {
+      "id": "n-w3k54cal",
+      "fromNode": "dirs-group",
+      "fromSide": "right",
+      "toNode": "tests",
+      "toSide": "left",
+      "label": "coverage"
+    }
+  ]
+}

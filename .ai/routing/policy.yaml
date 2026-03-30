@@ -76,6 +76,16 @@ routing:
       reviewer: cursor_auto
     require_human_approval: false
 
+  init_discovery:
+    description: "Project initialization and discovery work"
+    match:
+      keywords: [init, project_init, discovery]
+      task_types: [init, project_init, discovery]
+    run:
+      planner: claude_opus
+      reviewer: human_review_required
+    require_human_approval: true
+
   p2_routine:
     description: "Cheap routine — prefer local"
     match:

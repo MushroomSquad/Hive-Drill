@@ -61,6 +61,10 @@ completions:
 new task_id:
     @./scripts/new.sh "{{task_id}}"
 
+# Create a new project initialization task with the init brief template
+init task_id:
+    @./scripts/new.sh --type init "{{task_id}}"
+
 # Run full pipeline: Brief→Plan→Tasks→Code→Tests→Review→PR
 go task_id:
     @./scripts/go.sh "{{task_id}}"

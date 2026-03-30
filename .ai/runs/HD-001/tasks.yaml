@@ -1,0 +1,46 @@
+run_id: HD-001
+blueprint: feature-v1
+tasks:
+  - id: T1
+    title: Add init templates, blueprint, and routing metadata
+    owner: codex
+    priority: p1
+    model_lane: cloud
+    inputs:
+      - .ai/runs/HD-001/brief.md
+      - vault/templates/brief.md
+      - .ai/routing/policy.yaml
+    outputs:
+      - vault/templates/init-brief.md
+      - .ai/blueprints/init-v1.md
+      - .ai/routing/policy.yaml
+      - justfile
+    depends_on: []
+  - id: T2
+    title: Extend new task creation flow for typed briefs
+    owner: codex
+    priority: p1
+    model_lane: cloud
+    inputs:
+      - scripts/new.sh
+      - scripts/canvas-add.sh
+    outputs:
+      - scripts/new.sh
+      - scripts/canvas-add.sh
+      - vault/templates/brief.md
+    depends_on:
+      - T1
+  - id: T3
+    title: Add regression coverage and verify checks
+    owner: codex
+    priority: p1
+    model_lane: cloud
+    inputs:
+      - tests/test_new.sh
+      - scripts/ai-check.sh
+    outputs:
+      - tests/test_new.sh
+      - .ai/runs/HD-001/verification.md
+      - .ai/runs/HD-001/pr-body.md
+    depends_on:
+      - T2

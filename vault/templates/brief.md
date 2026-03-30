@@ -1,7 +1,7 @@
 ---
 task_id: <!-- FILL: e.g. FEAT-001 -->
 type: feature
-# type options: feature | bugfix | refactor | review
+# type options: feature | bugfix | refactor | review | init
 priority: p1
 # priority options: p0 (critical) | p1 (high) | p2 (normal) | p3 (low)
 status: draft

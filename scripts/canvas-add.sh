@@ -13,6 +13,15 @@ PRIORITY="${3:-p1}"
 TITLE="${4:-}"
 LANE="${5:-backlog}"
 
+case "$TYPE" in
+    feature|bugfix|refactor|review|release|init)
+        ;;
+    *)
+        echo "[canvas] Unknown type: $TYPE"
+        exit 1
+        ;;
+esac
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
@@ -49,6 +58,7 @@ type_icon = {
     "refactor": "♻️",
     "review":   "👁",
     "release":  "🚀",
+    "init":     "🏗",
 }
 
 # Colors by priority
