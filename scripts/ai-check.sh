@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Валидационный шлюз — единый критерий истины для всех агентов
-# Использование:
-#   ./scripts/ai-check.sh               — полная проверка
-#   ./scripts/ai-check.sh --quick       — только lint
-#   ./scripts/ai-check.sh --tests-only  — только тесты
-#   ./scripts/ai-check.sh --full        — полная + security
+# Validation gate — single source of truth for all agents
+# Usage:
+#   ./scripts/ai-check.sh               — full check
+#   ./scripts/ai-check.sh --quick       — lint only
+#   ./scripts/ai-check.sh --tests-only  — tests only
+#   ./scripts/ai-check.sh --full        — full + security
 set -uo pipefail
 
 MODE="${1:---full}"
@@ -51,25 +51,25 @@ if [[ "$MODE" != "--tests-only" ]]; then
     node)
       [ -f package.json ] && grep -q '"lint"' package.json \
         && run_check "ESLint / npm lint" "npm run lint" \
-        || skip "npm run lint (не найдено в package.json)"
+        || skip "npm run lint (not found in package.json)"
       ;;
     python)
       command -v ruff &>/dev/null \
         && run_check "ruff" "ruff check ." \
         || command -v flake8 &>/dev/null \
         && run_check "flake8" "flake8 ." \
-        || skip "linter не найден (ruff / flake8)"
+        || skip "linter not found (ruff / flake8)"
       ;;
     go)
       run_check "go vet" "go vet ./..."
       command -v golangci-lint &>/dev/null \
         && run_check "golangci-lint" "golangci-lint run" \
-        || skip "golangci-lint не найден"
+        || skip "golangci-lint not found"
       ;;
     make)
       grep -q "^lint:" Makefile && run_check "make lint" "make lint" || skip "make lint"
       ;;
-    *) skip "lint (тип проекта неизвестен)" ;;
+    *) skip "lint (unknown project type)" ;;
   esac
   echo "" | tee -a "$LOG_FILE"
 fi
@@ -83,12 +83,12 @@ if [[ "$MODE" != "--tests-only" && "$MODE" != "--quick" ]]; then
         && run_check "TypeScript" "npm run typecheck" \
         || [ -f tsconfig.json ] \
         && run_check "tsc --noEmit" "npx tsc --noEmit" \
-        || skip "typecheck (не TypeScript проект)"
+        || skip "typecheck (not a TypeScript project)"
       ;;
     python)
       command -v mypy &>/dev/null \
         && run_check "mypy" "mypy ." \
-        || skip "mypy не найден"
+        || skip "mypy not found"
       ;;
     go)
       run_check "go build" "go build ./..."
@@ -104,12 +104,12 @@ case "$PROJECT_TYPE" in
   node)
     [ -f package.json ] && grep -q '"test"' package.json \
       && run_check "npm test" "npm test" \
-      || skip "npm test (не найдено в package.json)"
+      || skip "npm test (not found in package.json)"
     ;;
   python)
     command -v pytest &>/dev/null \
       && run_check "pytest" "python -m pytest -q" \
-      || skip "pytest не найден"
+      || skip "pytest not found"
     ;;
   go)
     run_check "go test" "go test ./..."
@@ -125,22 +125,22 @@ case "$PROJECT_TYPE" in
     elif [ -f tests/run_tests.sh ]; then
       run_check "bash tests" "bash tests/run_tests.sh"
     else
-      skip "tests (тип проекта неизвестен)"
+      skip "tests (unknown project type)"
     fi
     ;;
 esac
 echo "" | tee -a "$LOG_FILE"
 
-# ── Security sweep (только --full) ────────────────────────────────────
+# ── Security sweep (only --full) ────────────────────────────────────
 if [[ "$MODE" == "--full" ]]; then
   echo "--- Security sweep ---" | tee -a "$LOG_FILE"
 
-  # Secrets scan (базовый)
+  # Secrets scan (basic)
   if grep -rE "(password|secret|api_key|token)\s*=\s*['\"][^'\"]{8,}" \
        --include="*.py" --include="*.ts" --include="*.js" --include="*.go" \
        --include="*.toml" --include="*.yaml" \
        . 2>/dev/null | grep -v ".env.example" | grep -v ".gitignore" | head -5; then
-    fail "Возможные hardcoded secrets найдены"
+    fail "Possible hardcoded secrets found"
   else
     pass "Secrets scan"
   fi
@@ -164,6 +164,6 @@ if [ "$FAILED" -eq 0 ]; then
   echo -e "${GREEN}ai-check: PASS${NC}" | tee -a "$LOG_FILE"
   exit 0
 else
-  echo -e "${RED}ai-check: FAIL — исправь ошибки выше${NC}" | tee -a "$LOG_FILE"
+  echo -e "${RED}ai-check: FAIL — fix errors above${NC}" | tee -a "$LOG_FILE"
   exit 1
 fi

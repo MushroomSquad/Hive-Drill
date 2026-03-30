@@ -5,11 +5,11 @@
 ---
 
 ## Purpose
-Подготовка и проверка release: финальный sweep, CHANGELOG, migration guide, rollback plan.
+Prepare and verify release: final sweep, CHANGELOG, migration guide, rollback plan.
 
 ## Roles
 
-| Стадия | Владелец |
+| Stage | Owner |
 |--------|---------|
 | Release brief | Human / Cursor |
 | Automated sweep | scripts |
@@ -32,18 +32,18 @@
 - ...
 
 ## Breaking changes
-- [ ] Нет
-- [ ] Есть: <описание>
+- [ ] No
+- [ ] Yes: <description>
 
 ## Migration required
-- [ ] Нет
-- [ ] Есть: <описание>
+- [ ] No
+- [ ] Yes: <description>
 
 ## Rollback plan
-<как откатиться если что-то пойдёт не так>
+<how to rollback if something goes wrong>
 
 ## Release window
-<когда деплоить>
+<when to deploy>
 
 ## Go/No-go criteria
 - [ ] ...
@@ -57,18 +57,18 @@
 ./scripts/ai-check.sh --full
 ```
 
-Дополнительные проверки:
-- [ ] Все запланированные задачи в done
-- [ ] Нет открытых P0 bugов в этом milestoneе
-- [ ] Нет TODO без TICKET-ID в коде
-- [ ] Нет временного debug-кода
-- [ ] Версия обновлена (package.json / pyproject.toml / etc.)
+Additional checks:
+- [ ] All planned tasks in done
+- [ ] No open P0 bugs in this milestone
+- [ ] No TODO without TICKET-ID in code
+- [ ] No temporary debug code
+- [ ] Version updated (package.json / pyproject.toml / etc.)
 
 ---
 
 ## Stage 2: Security sweep
 
-**Владелец:** Claude Code (всегда P0)
+**Owner:** Claude Code (always P0)
 
 ```markdown
 # Security findings: RELEASE-<version>
@@ -92,8 +92,8 @@
 
 ## Stage 3: CHANGELOG
 
-**Владелец:** Codex
-**Формат:** Keep a Changelog (https://keepachangelog.com)
+**Owner:** Codex
+**Format:** Keep a Changelog (https://keepachangelog.com)
 
 ```markdown
 ## [<version>] - <date>
@@ -121,39 +121,39 @@
 
 ## Stage 4: Rollback plan
 
-**Владелец:** Claude Code
+**Owner:** Claude Code
 
 ```markdown
 # Rollback Plan: RELEASE-<version>
 
 ## Trigger conditions
-Когда откатываться (метрики, ошибки, порог).
+When to rollback (metrics, errors, threshold).
 
 ## Steps
 1. ...
 2. ...
 
 ## Data rollback
-Нужна ли обратная миграция?
+Is backward migration needed?
 
 ## Estimated time
-Сколько времени займёт откат.
+How long will rollback take.
 
 ## Contact
-Кто принимает решение об откате.
+Who makes rollback decision.
 ```
 
 ---
 
 ## Stage 5: Sign-off
 
-Чеклист для человека:
+Checklist for human:
 - [ ] Security sweep: PASS
 - [ ] All tests: PASS
-- [ ] CHANGELOG заполнен
-- [ ] Rollback plan есть
-- [ ] Release window согласован
-- [ ] Деплой план понятен команде
+- [ ] CHANGELOG filled
+- [ ] Rollback plan exists
+- [ ] Release window agreed
+- [ ] Deploy plan understood by team
 
 ---
 
@@ -172,4 +172,4 @@
 
 ## Writing standards
 
-После написания каждого документа — `/humanize`. CHANGELOG — особенно важно. См. BASE.md § Writing standards.
+After writing each document — `/humanize`. CHANGELOG — especially important. See BASE.md § Writing standards.

@@ -1,53 +1,53 @@
 # Codex configuration
-# Документация: https://github.com/openai/codex
+# Documentation: https://github.com/openai/codex
 
 [core]
-# Режим по умолчанию: conservative изменения
+# Default mode: conservative changes
 default_mode = "conservative"
 
-# Инструкции агента (читает при запуске)
+# Agent instructions (read on startup)
 instructions = "AGENTS.md"
 
-# Рабочая директория
+# Working directory
 # working_dir = "."
 
 [model]
-# Модель по умолчанию (cloud)
+# Default model (cloud)
 default = "o4-mini"
 
-# Модель для review
+# Model for review
 review_model = "gpt-4.1"
 
 # Reasoning effort: low | medium | high | max
 reasoning_effort = "medium"
 
-# --- Профили (переключение через: codex --profile <name>) ---
+# --- Profiles (switch via: codex --profile <name>) ---
 
 [profiles.cloud-high]
 model = "o3"
 reasoning_effort = "high"
-description = "P0 задачи: security, architecture, critical bugs"
+description = "P0 tasks: security, architecture, critical bugs"
 
 [profiles.cloud-medium]
 model = "o4-mini"
 reasoning_effort = "medium"
-description = "P1 задачи: features, refactors, integrations"
+description = "P1 tasks: features, refactors, integrations"
 
 [profiles.local-fast]
 model = "Qwen2.5-Coder-7B-Instruct-exl2"
 reasoning_effort = "low"
-description = "P2 задачи: boilerplate, docs, simple tests"
+description = "P2 tasks: boilerplate, docs, simple tests"
 
 [profiles.local-fast.model_provider]
 name = "local"
 base_url = "http://localhost:33931/v1"
-# Без аутентификации — локальный сервер
+# No authentication — local server
 # env_key = ""
 
 [profiles.local-cheap]
 model = "Qwen2.5-14B-Instruct-exl2"
 reasoning_effort = "low"
-description = "P3 задачи: triage, search, changelogs"
+description = "P3 tasks: triage, search, changelogs"
 
 [profiles.local-cheap.model_provider]
 name = "local"
@@ -55,7 +55,7 @@ base_url = "http://localhost:33931/v1"
 
 # --- Sandbox / safety ---
 [sandbox]
-# Команды, которые Codex может выполнять без подтверждения
+# Commands that Codex can execute without approval
 allowed_commands = [
   "npm test",
   "npm run lint",
@@ -70,7 +70,7 @@ allowed_commands = [
   "./scripts/ai-check.sh",
 ]
 
-# Команды, требующие подтверждения
+# Commands requiring approval
 require_approval = [
   "git push",
   "git reset",
@@ -82,8 +82,8 @@ require_approval = [
 ]
 
 [history]
-persistence = "project"  # сохранять историю в .codex/
+persistence = "project"  # save history in .codex/
 
 [mcp]
-# MCP серверы (синхронизировать с mcp/config.json)
-# Добавляй сюда те же серверы что в Cursor и Claude Code
+# MCP servers (sync with mcp/config.json)
+# Add the same servers as in Cursor and Claude Code

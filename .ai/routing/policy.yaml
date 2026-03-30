@@ -1,15 +1,15 @@
 # Model Routing Policy
-# Определяет, какой агент и какая модель обрабатывает задачу по приоритету.
-# Используется scripts/blueprint-run.sh и justfile.
+# Defines which agent and model handles task by priority.
+# Used by scripts/blueprint-run.sh and justfile.
 #
-# Роутинг не автоматический — это policy-документ для агентов и скриптов.
-# Агент обязан прочитать этот файл и следовать routing rules.
+# Routing is not automatic — this is policy document for agents and scripts.
+# Agent must read this file and follow routing rules.
 
 version: "1"
 
 lanes:
   cloud:
-    description: "Облачные модели — для критичных и сложных задач"
+    description: "Cloud models — for critical and complex tasks"
     providers:
       claude_opus:
         tool: claude-code
@@ -33,7 +33,7 @@ lanes:
         use_for: [P1_feature, P1_refactor, P1_integration]
 
   local:
-    description: "Локальные модели — для рутины и фонового задач"
+    description: "Local models — for routine and background tasks"
     providers:
       codex_local_fast:
         tool: codex
@@ -54,7 +54,7 @@ lanes:
 
 routing:
   p0_critical:
-    description: "Критично и рискованно — только облако"
+    description: "Critical and risky — cloud only"
     match:
       keywords: [security, migration, architecture, unclear_root_cause, cross_repo]
       task_types: [security_fix, schema_migration, auth_change, data_migration]
@@ -66,7 +66,7 @@ routing:
     require_human_approval: true
 
   p1_standard:
-    description: "Обычные задачи разработки"
+    description: "Standard development tasks"
     match:
       keywords: [feature, refactor, integration, medium_test]
       task_types: [feature, refactor, integration, test_suite]
@@ -77,7 +77,7 @@ routing:
     require_human_approval: false
 
   p2_routine:
-    description: "Дешёвая рутина — prefer local"
+    description: "Cheap routine — prefer local"
     match:
       keywords: [boilerplate, docs, rename, simple_test, log, format]
       task_types: [boilerplate, documentation, rename, simple_fix]
@@ -90,7 +90,7 @@ routing:
     require_human_approval: false
 
   p3_background:
-    description: "Фоновая механика — всегда local"
+    description: "Background mechanics — always local"
     match:
       keywords: [triage, search, changelog, comment, summarize, classify]
       task_types: [issue_triage, file_search, changelog_draft, comment_gen]
@@ -101,20 +101,20 @@ routing:
 
 escalation_rules:
   low_confidence:
-    description: "Модель не уверена (confidence score < threshold)"
+    description: "Model not confident (confidence score < threshold)"
     threshold: 0.7
     action: escalate_to_next_lane
 
   large_diff:
-    description: "Неожиданно большой diff"
+    description: "Unexpectedly large diff"
     threshold_lines: 300
     action: stop_and_report
 
   tool_error:
-    description: "Ошибка инструмента или внешнего вызова"
+    description: "Tool or external call error"
     max_retries: 2
     action: escalate_to_next_lane
 
   p0_trigger:
-    description: "Обнаружена P0 проблема в ходе P1/P2 задачи"
+    description: "P0 issue discovered during P1/P2 task"
     action: stop_create_findings_escalate_human

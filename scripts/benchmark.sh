@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Простой бенчмарк скорости: tok/s для текущего endpoint
-# Использование: ./scripts/benchmark.sh [tabbyapi|llamacpp] [short|long]
+# Simple speed benchmark: tok/s for current endpoint
+# Usage: ./scripts/benchmark.sh [tabbyapi|llamacpp] [short|long]
 set -euo pipefail
 
 TARGET="${1:-tabbyapi}"
@@ -12,12 +12,12 @@ case "$TARGET" in
   *)         BASE_URL="$TARGET" ;;
 esac
 
-# Получаем первую доступную модель
+# Get first available model
 MODEL_ID=$(curl -sf "$BASE_URL/models" | \
   python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['id'] if d.get('data') else '')" 2>/dev/null || echo "")
 
 if [ -z "$MODEL_ID" ]; then
-  echo "Нет загруженных моделей или endpoint недоступен: $BASE_URL"
+  echo "No loaded models or endpoint unavailable: $BASE_URL"
   exit 1
 fi
 
@@ -32,10 +32,10 @@ case "$MODE" in
     ;;
 esac
 
-echo "=== Бенчмарк ==="
+echo "=== Benchmark ==="
 echo "Endpoint:   $BASE_URL"
-echo "Модель:     $MODEL_ID"
-echo "Режим:      $MODE (max_tokens=$MAX_TOKENS)"
+echo "Model:      $MODEL_ID"
+echo "Mode:       $MODE (max_tokens=$MAX_TOKENS)"
 echo ""
 
 START=$(date +%s%3N)
@@ -62,10 +62,10 @@ comp_tokens = usage.get('completion_tokens', len(content.split()))
 elapsed_s = $ELAPSED_MS / 1000.0
 tps = comp_tokens / elapsed_s if elapsed_s > 0 else 0
 
-print(f'Время:          {elapsed_s:.2f} s')
-print(f'Токены вывода:  {comp_tokens}')
-print(f'Скорость:       {tps:.1f} tok/s')
+print(f'Time:          {elapsed_s:.2f} s')
+print(f'Output tokens: {comp_tokens}')
+print(f'Speed:         {tps:.1f} tok/s')
 print()
-print('Ответ (начало):')
+print('Response (start):')
 print(content[:300].strip())
-" 2>/dev/null || echo "Не удалось разобрать ответ"
+" 2>/dev/null || echo "Failed to parse response"

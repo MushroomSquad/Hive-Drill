@@ -1,54 +1,54 @@
 # Skill: Module Migration
-**Owner:** Claude Code (планирование P0/P1) + Codex (исполнение P1)
-**When to use:** Перемещение/переименование модуля, переход на новую зависимость, извлечение в отдельный пакет.
+**Owner:** Claude Code (planning P0/P1) + Codex (execution P1)
+**When to use:** Move/rename module, switch to new dependency, extract to separate package.
 
 ---
 
 ## Task
-Безопасно мигрировать модуль с полным сохранением поведения.
+Safely migrate module with full behavior preservation.
 
-## Pre-flight checklist (ОБЯЗАТЕЛЬНО перед началом)
-- [ ] Тесты для мигрируемого кода есть и зелёные
-- [ ] Понятно, кто использует модуль (grep / IDE references)
-- [ ] Есть rollback plan (ветка, feature flag, или быстрый revert)
-- [ ] Scope определён: что мигрируем, что НЕ трогаем
+## Pre-flight checklist (MANDATORY before start)
+- [ ] Tests for migrated code exist and green
+- [ ] Clear who uses module (grep / IDE references)
+- [ ] Rollback plan exists (branch, feature flag, or quick revert)
+- [ ] Scope defined: what to migrate, what NOT to touch
 
 ## Steps
 
 ### 1. Map dependencies
 ```bash
-# Найти всех пользователей модуля
+# Find all module users
 grep -r "import.*<module>" src/ tests/
 grep -r "from <module>" src/ tests/
 ```
-Зафиксировать в `migration-map.md`.
+Record in `migration-map.md`.
 
 ### 2. Plan migration
-Выбрать стратегию:
-- **Strangler Fig** (постепенно): новый модуль → перенаправить → удалить старый
-- **Big Bang** (атомарно): создать новое → переключить всех → удалить старое
-- **Alias/Re-export** (совместимость): старый путь = алиас к новому
+Choose strategy:
+- **Strangler Fig** (gradually): new module → redirect → delete old
+- **Big Bang** (atomic): create new → switch all → delete old
+- **Alias/Re-export** (compatible): old path = alias to new
 
 ### 3. Execute (step by step)
 
 ```
-Step A: Создать новое место / новый модуль
-  → ./scripts/ai-check.sh  (тесты PASS)
+Step A: Create new location / new module
+  → ./scripts/ai-check.sh  (tests PASS)
 
-Step B: Перенести по одному файлу / классу
-  → ./scripts/ai-check.sh  (тесты PASS после каждого)
+Step B: Move file / class one by one
+  → ./scripts/ai-check.sh  (tests PASS after each)
 
-Step C: Обновить все импорты
-  → ./scripts/ai-check.sh  (тесты PASS)
+Step C: Update all imports
+  → ./scripts/ai-check.sh  (tests PASS)
 
-Step D: Удалить старый модуль
-  → ./scripts/ai-check.sh  (тесты PASS)
+Step D: Delete old module
+  → ./scripts/ai-check.sh  (tests PASS)
 ```
 
 ### 4. Verify
-- [ ] Все тесты зелёные
-- [ ] Нет оставшихся ссылок на старый путь (`grep` clean)
-- [ ] Нет breaking change в публичном API (если модуль публичный)
+- [ ] All tests green
+- [ ] No remaining old path references (`grep` clean)
+- [ ] No breaking change in public API (if module is public)
 
 ## Output
 ```
@@ -59,5 +59,5 @@ Step D: Удалить старый модуль
 ```
 
 ## Escalation
-- Если модуль использует > 20 мест → разбить на несколько задач
-- Если публичный API → нужна deprecation-стратегия, не мгновенный снос
+- If module used in > 20 places → split into multiple tasks
+- If public API → need deprecation strategy, not instant removal

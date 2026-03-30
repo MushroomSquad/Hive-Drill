@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# canvas-move.sh — двигает карточку задачи по канбан-доске
-# Использование:
+# canvas-move.sh — moves task card on kanban board
+# Usage:
 #   ./scripts/canvas-move.sh <TASK-ID> <lane>
 #   lane: backlog | planning | inprogress | review | done
 set -euo pipefail
@@ -22,11 +22,11 @@ else
     CANVAS="${PROJECT_ROOT}/vault/canvas/project-board.canvas"
 fi
 
-[[ -f "$CANVAS" ]] || { echo "[canvas] Canvas не найден: $CANVAS"; exit 0; }
+[[ -f "$CANVAS" ]] || { echo "[canvas] Canvas not found: $CANVAS"; exit 0; }
 
-# X-координаты карточек внутри каждой колонки
-# Колонки: backlog=0, planning=280, inprogress=560, review=840, done=1120
-# Карточки со смещением +20 от края колонки
+# X-coordinates of cards within each column
+# Columns: backlog=0, planning=280, inprogress=560, review=840, done=1120
+# Cards with +20 offset from column edge
 python3 - "$CANVAS" "$TASK_ID" "$LANE" <<'PYEOF'
 import json, sys, re
 
@@ -41,7 +41,7 @@ lane_x = {
 }
 
 if lane not in lane_x:
-    print(f"[canvas] Неизвестная lane: {lane}. Допустимые: {list(lane_x.keys())}")
+    print(f"[canvas] Unknown lane: {lane}. Valid: {list(lane_x.keys())}")
     sys.exit(0)
 
 target_x = lane_x[lane]
@@ -49,7 +49,7 @@ target_x = lane_x[lane]
 with open(canvas_path, "r", encoding="utf-8") as f:
     data = json.load(f)
 
-# Ищем карточку по task_id в тексте ноды
+# Find card by task_id in node text
 moved = False
 for node in data.get("nodes", []):
     if node.get("type") == "text" and task_id in node.get("text", ""):
@@ -60,7 +60,7 @@ for node in data.get("nodes", []):
         break
 
 if not moved:
-    print(f"[canvas] Карточка {task_id} не найдена в canvas, пропускаю.")
+    print(f"[canvas] Card {task_id} not found in canvas, skipping.")
     sys.exit(0)
 
 with open(canvas_path, "w", encoding="utf-8") as f:

@@ -5,11 +5,11 @@
 ---
 
 ## Purpose
-Структурированный code review PR с классификацией замечаний.
+Structured PR code review with issue classification.
 
 ## Roles
 
-| Стадия | Владелец |
+| Stage | Owner |
 |--------|---------|
 | Context loading | Claude Code |
 | Automated checks | scripts |
@@ -20,15 +20,15 @@
 
 ## Stage 0: Context loading
 
-**Владелец:** Claude Code
-**Задача:** понять что и зачем изменяется
+**Owner:** Claude Code
+**Task:** understand what and why is changing
 
-Читать в таком порядке:
+Read in this order:
 1. PR description / `pr-body.md`
-2. `brief.md` и `plan.md` из `.ai/runs/` если есть
-3. Diff (не просто `git diff`, а с контекстом: `git diff --stat`, потом по файлам)
-4. Тесты изменились?
-5. Смежные файлы (импорты, зависимости)
+2. `brief.md` and `plan.md` from `.ai/runs/` if exists
+3. Diff (not just `git diff`, but with context: `git diff --stat`, then by files)
+4. Tests changed?
+5. Adjacent files (imports, dependencies)
 
 ---
 
@@ -38,41 +38,41 @@
 ./scripts/ai-check.sh
 ```
 
-Если красный → зафиксировать в findings как blocker.
+If red → record in findings as blocker.
 
 ---
 
 ## Stage 2: Narrative review
 
-**Шаблон обхода diff:**
+**Diff traversal template:**
 
-Для каждого изменённого модуля:
-1. Корректность логики
-2. Безопасность (injection, auth, secrets)
-3. Производительность (N+1, неожиданные аллокации)
-4. Тестовое покрытие
-5. Соответствие архитектуре (BASE.md, architecture-map.md)
-6. Читаемость и соглашения по коду
+For each changed module:
+1. Logic correctness
+2. Security (injection, auth, secrets)
+3. Performance (N+1, unexpected allocations)
+4. Test coverage
+5. Architecture compliance (BASE.md, architecture-map.md)
+6. Readability and code conventions
 
 ---
 
 ## Stage 3: Findings
 
-**Выход:** `findings.md`
+**Output:** `findings.md`
 
-**Классификация замечаний:**
+**Issue classification:**
 
-| Уровень | Когда | Требует action? |
+| Level | When | Requires action? |
 |---------|-------|----------------|
-| 🔴 **BLOCKER** | Баг, security issue, data loss risk, нарушение архитектуры | PR не мержится |
-| 🟡 **SUGGESTION** | Улучшение, которое стоит сделать | Желательно исправить |
-| 💬 **NIT** | Стиль, мелкая читаемость | По желанию |
+| 🔴 **BLOCKER** | Bug, security issue, data loss risk, architecture violation | PR not merged |
+| 🟡 **SUGGESTION** | Improvement worth making | Preferably fix |
+| 💬 **NIT** | Style, minor readability | Optional |
 
 ```markdown
 # Findings: PR-<ID>
 
 ## Overview
-Краткое описание изменений и их качества.
+Brief description of changes and their quality.
 
 ## Automated checks
 - lint: PASS / FAIL
@@ -81,28 +81,28 @@
 
 ## Issues
 
-### 🔴 BLOCKER: <Заголовок>
+### 🔴 BLOCKER: <Title>
 **File:** `src/...` line N
 **Problem:** ...
 **Fix:** ...
 
-### 🟡 SUGGESTION: <Заголовок>
+### 🟡 SUGGESTION: <Title>
 **File:** `src/...`
 **Why:** ...
 **Option:** ...
 
-### 💬 NIT: <Заголовок>
+### 💬 NIT: <Title>
 ...
 
 ## Security assessment
-- [ ] Нет hardcoded secrets
-- [ ] Нет SQL injection / XSS / command injection
-- [ ] Auth / authz не обходится
-- [ ] Нет exposing internal data через API
+- [ ] No hardcoded secrets
+- [ ] No SQL injection / XSS / command injection
+- [ ] Auth / authz not bypassed
+- [ ] No exposing internal data via API
 
 ## Architecture assessment
-- [ ] Соответствует архитектурным constraints из BASE.md
-- [ ] Нет нарушения boundaries модулей
+- [ ] Complies with architecture constraints from BASE.md
+- [ ] No module boundary violations
 
 ## Verdict
 APPROVED | REQUEST CHANGES | NEEDS DISCUSSION
@@ -114,10 +114,10 @@ APPROVED | REQUEST CHANGES | NEEDS DISCUSSION
 
 ## Escalation triggers (→ human required)
 
-- Любой BLOCKER уровня security
-- Breaking change без migration guide
-- Изменение схемы БД без review DBA
-- Diff > 800 строк без очевидного плана
+- Any security-level BLOCKER
+- Breaking change without migration guide
+- DB schema change without DBA review
+- Diff > 800 lines without clear plan
 
 ---
 
@@ -132,4 +132,4 @@ APPROVED | REQUEST CHANGES | NEEDS DISCUSSION
 
 ## Writing standards
 
-После написания `findings.md` — `/humanize`. См. BASE.md § Writing standards.
+After writing `findings.md` — `/humanize`. See BASE.md § Writing standards.

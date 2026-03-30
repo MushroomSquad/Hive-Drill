@@ -1,11 +1,11 @@
 # Skill: Release Checklist
-**Owner:** Codex (сбор) + Claude Code (security sweep)
-**When to use:** Перед каждым релизом. Автоматизирует рутинную часть проверки.
+**Owner:** Codex (gathering) + Claude Code (security sweep)
+**When to use:** Before each release. Automates routine check part.
 
 ---
 
 ## Task
-Прогнать полный pre-release checklist и сформировать go/no-go отчёт.
+Run full pre-release checklist and produce go/no-go report.
 
 ## Steps
 
@@ -16,13 +16,13 @@
 
 ### 2. Code hygiene check
 ```bash
-# TODO без TICKET-ID
+# TODO without TICKET-ID
 grep -r "TODO" src/ | grep -v "TODO(TICKET" | grep -v "TODO: n/a"
 
 # Debug code
 grep -r "console.log\|debugger\|pdb.set_trace\|breakpoint()" src/
 
-# Hardcoded secrets (базовый scan)
+# Hardcoded secrets (basic scan)
 grep -rE "(password|secret|token|api_key)\s*=\s*['\"][^'\"]{8,}" src/
 ```
 
@@ -39,12 +39,12 @@ govulncheck ./...
 ```
 
 ### 4. Version bump check
-- [ ] Версия обновлена в package.json / pyproject.toml / go.mod
-- [ ] Git tag запланирован
+- [ ] Version updated in package.json / pyproject.toml / go.mod
+- [ ] Git tag planned
 
 ### 5. CHANGELOG check
-- [ ] CHANGELOG.md обновлён для этого релиза
-- [ ] Все breaking changes задокументированы
+- [ ] CHANGELOG.md updated for this release
+- [ ] All breaking changes documented
 
 ## Output: `release-checklist.md`
 

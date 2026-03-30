@@ -1,6 +1,6 @@
-# Системный промпт: Агент (ROME / agentic mode)
+# System prompt: Agent (ROME / agentic mode)
 
-Используется с: ROME-30B-A3B или моделями с поддержкой tool use
+Used with: ROME-30B-A3B or models with tool use support
 
 ---
 

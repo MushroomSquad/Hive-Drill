@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Управление git worktrees для параллельной агентной работы
-# Использование:
+# Manages git worktrees for parallel agent work
+# Usage:
 #   ./scripts/worktree.sh create <TASK-ID> [agent]
 #   ./scripts/worktree.sh list
 #   ./scripts/worktree.sh clean <TASK-ID>
@@ -18,28 +18,28 @@ info(){ echo "[--]  $*"; }
 
 case "$CMD" in
   create)
-    [ -n "$TASK_ID" ] || die "TASK-ID обязателен для create"
+    [ -n "$TASK_ID" ] || die "TASK-ID required for create"
 
-    # Проверяем что мы в git репо
-    git rev-parse --is-inside-work-tree &>/dev/null || die "Не git репозиторий"
+    # Check we're in git repo
+    git rev-parse --is-inside-work-tree &>/dev/null || die "Not a git repository"
 
-    # Базовая ветка
+    # Base branch
     BASE_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
 
     mkdir -p "$WT_BASE"
 
-    # Создаём worktree для каждого агента
+    # Create worktree for each agent
     for ag in claude codex; do
       WT_NAME="${TASK_ID}-${ag}"
       WT_PATH="$WT_BASE/$WT_NAME"
       BRANCH_NAME="agent/${TASK_ID}-${ag}"
 
       if [ -d "$WT_PATH" ]; then
-        info "Worktree уже существует: $WT_PATH"
+        info "Worktree already exists: $WT_PATH"
         continue
       fi
 
-      # Создаём ветку и worktree
+      # Create branch and worktree
       if git show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
         git worktree add "$WT_PATH" "$BRANCH_NAME"
       else
@@ -50,7 +50,7 @@ case "$CMD" in
     done
 
     echo ""
-    echo "Агенты работают в изолированных деревьях:"
+    echo "Agents work in isolated trees:"
     echo "  Claude: cd $WT_BASE/${TASK_ID}-claude && claude ..."
     echo "  Codex:  cd $WT_BASE/${TASK_ID}-codex  && codex ..."
     ;;
@@ -61,44 +61,44 @@ case "$CMD" in
     ;;
 
   clean)
-    [ -n "$TASK_ID" ] || die "TASK-ID обязателен для clean"
+    [ -n "$TASK_ID" ] || die "TASK-ID required for clean"
 
     for ag in claude codex review; do
       WT_PATH="$WT_BASE/${TASK_ID}-${ag}"
       BRANCH="agent/${TASK_ID}-${ag}"
 
       if [ -d "$WT_PATH" ]; then
-        info "Удаляю worktree: $WT_PATH"
+        info "Removing worktree: $WT_PATH"
         git worktree remove "$WT_PATH" --force 2>/dev/null || rm -rf "$WT_PATH"
         git branch -d "$BRANCH" 2>/dev/null || true
-        ok "Удалён: $WT_PATH"
+        ok "Removed: $WT_PATH"
       fi
     done
     ;;
 
   clean-all)
-    echo "Удалить ВСЕ agent/* worktrees? (y/N)"
+    echo "Delete ALL agent/* worktrees? (y/N)"
     read -r ans
     [[ "$ans" =~ ^[Yy]$ ]] || exit 0
 
     git worktree list --porcelain | grep "worktree " | awk '{print $2}' | while read -r wt; do
       if [[ "$wt" == *"/wt/"* ]]; then
-        info "Удаляю: $wt"
+        info "Removing: $wt"
         git worktree remove "$wt" --force 2>/dev/null || true
       fi
     done
 
-    # Удалить agent/* ветки
+    # Delete agent/* branches
     git branch | grep "agent/" | while read -r branch; do
       git branch -d "$branch" 2>/dev/null || true
     done
 
-    ok "Все agent worktrees удалены"
+    ok "All agent worktrees removed"
     ;;
 
   *)
-    echo "Неизвестная команда: $CMD"
-    echo "Команды: create, list, clean, clean-all"
+    echo "Unknown command: $CMD"
+    echo "Commands: create, list, clean, clean-all"
     exit 1
     ;;
 esac

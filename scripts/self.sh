@@ -26,7 +26,7 @@ _config_get() {
 }
 
 _require_config() {
-    [[ -f "${SELF_CONFIG}" ]] || { err "Self workspace не инициализирован. Запусти: just self init"; exit 1; }
+    [[ -f "${SELF_CONFIG}" ]] || { err "Self workspace not initialized. Run: just self init"; exit 1; }
 }
 
 # ─── init ─────────────────────────────────────────────────────────────────────
@@ -43,11 +43,11 @@ cmd_init() {
     done
 
     if [[ -z "$remote_url" ]]; then
-        echo -n "  Git remote URL (для клонирования roi): "
+        echo -n "  Git remote URL (for cloning roi): "
         read -r remote_url
     fi
     if [[ -z "$github_repo" ]]; then
-        echo -n "  GitHub repo (owner/repo, для issues): "
+        echo -n "  GitHub repo (owner/repo, for issues): "
         read -r github_repo
     fi
 
@@ -56,15 +56,15 @@ cmd_init() {
 
     # Clone or update workspace
     if [[ -d "${workspace_path}/.git" ]]; then
-        warn "Workspace уже существует: ${workspace_path}"
-        info "Обновляю..."
+        warn "Workspace already exists: ${workspace_path}"
+        info "Updating..."
         git -C "${workspace_path}" pull
     else
-        info "Клонирую ${remote_url} → ${workspace_path}..."
+        info "Cloning ${remote_url} → ${workspace_path}..."
         mkdir -p "$(dirname "${workspace_path}")"
         git clone "${remote_url}" "${workspace_path}"
     fi
-    ok "Workspace готов: ${workspace_path}"
+    ok "Workspace ready: ${workspace_path}"
 
     # Save config
     mkdir -p "$(dirname "${SELF_CONFIG}")"
@@ -79,7 +79,7 @@ with open(cfg_path, "w") as f:
         "project_name":   project_name,
     }, f, indent=2)
 PYEOF
-    ok "Config сохранён: ${SELF_CONFIG}"
+    ok "Config saved: ${SELF_CONFIG}"
 
     # Register as project (reuses project.sh)
     "${SCRIPT_DIR}/project.sh" add "${project_name}" "${workspace_path}" "roi self-improvement workspace"
@@ -88,16 +88,16 @@ PYEOF
     "${SCRIPT_DIR}/project.sh" switch "${project_name}"
 
     # Generate initial architecture docs for workspace
-    info "Генерирую документацию workspace..."
+    info "Generating workspace documentation..."
     "${SCRIPT_DIR}/canvas-arch.sh"
 
     echo ""
-    ok "Self-improve workspace инициализирован."
+    ok "Self-improve workspace initialized."
     echo -e "  Workspace:  ${workspace_path}"
     echo -e "  GitHub:     https://github.com/${github_repo}/issues"
     echo -e "  Project:    ${project_name}"
     echo ""
-    echo -e "  Следующий шаг: ${CYAN}just issues${RESET}"
+    echo -e "  Next step: ${CYAN}just issues${RESET}"
 }
 
 # ─── update ───────────────────────────────────────────────────────────────────
@@ -107,16 +107,16 @@ cmd_update() {
     local workspace_path
     workspace_path="$(_config_get workspace_path)"
 
-    info "Обновляю workspace: ${workspace_path}..."
+    info "Updating workspace: ${workspace_path}..."
     git -C "${workspace_path}" pull
-    ok "Workspace обновлён до $(git -C "${workspace_path}" rev-parse --short HEAD)."
+    ok "Workspace updated to $(git -C "${workspace_path}" rev-parse --short HEAD)."
 }
 
 # ─── status ───────────────────────────────────────────────────────────────────
 
 cmd_status() {
     if [[ ! -f "${SELF_CONFIG}" ]]; then
-        warn "Self workspace не инициализирован. just self init"
+        warn "Self workspace not initialized. just self init"
         return 0
     fi
 
@@ -132,7 +132,7 @@ cmd_status() {
     echo ""
 
     if [[ ! -d "${workspace_path}/.git" ]]; then
-        err "Workspace не найден: ${workspace_path}"
+        err "Workspace not found: ${workspace_path}"
         return 1
     fi
 
@@ -140,15 +140,15 @@ cmd_status() {
     branch="$(git -C "${workspace_path}" symbolic-ref --short HEAD 2>/dev/null || echo 'detached')"
     local changes
     changes="$(git -C "${workspace_path}" status --short | wc -l | tr -d ' ')"
-    ok "Branch: ${branch}  |  Изменений: ${changes}"
+    ok "Branch: ${branch}  |  Changes: ${changes}"
 
     # ahead/behind
     git -C "${workspace_path}" fetch --quiet 2>/dev/null || true
     local ahead behind
     ahead="$(git -C "${workspace_path}" rev-list @{u}..HEAD --count 2>/dev/null || echo 0)"
     behind="$(git -C "${workspace_path}" rev-list HEAD..@{u} --count 2>/dev/null || echo 0)"
-    [[ "$ahead"  -gt 0 ]] && warn "Ahead:  ${ahead} коммит(ов) — не запушено"
-    [[ "$behind" -gt 0 ]] && warn "Behind: ${behind} коммит(ов) — не спулено"
+    [[ "$ahead"  -gt 0 ]] && warn "Ahead:  ${ahead} commit(s) — not pushed"
+    [[ "$behind" -gt 0 ]] && warn "Behind: ${behind} commit(s) — not pulled"
 
     # Active runs
     local runs_dir="${PROJECT_ROOT}/.ai/runs/${project_name}"
@@ -173,7 +173,7 @@ cmd_sync() {
 
     # Commit workspace changes
     if git -C "${workspace_path}" diff --quiet && git -C "${workspace_path}" diff --staged --quiet; then
-        warn "Нет незакоммиченных изменений в workspace."
+        warn "No uncommitted changes in workspace."
     else
         echo ""
         git -C "${workspace_path}" status --short | head -20
@@ -184,21 +184,21 @@ cmd_sync() {
 
         git -C "${workspace_path}" add -A
         git -C "${workspace_path}" commit -m "${msg}"
-        ok "Закоммичено: ${msg}"
+        ok "Committed: ${msg}"
     fi
 
     # Push workspace
-    info "Пушу workspace → remote..."
+    info "Pushing workspace → remote..."
     git -C "${workspace_path}" push
-    ok "Workspace запушен."
+    ok "Workspace pushed."
 
     # Pull current roi (operator becomes the improved version)
-    info "Пулю текущий roi (operator)..."
+    info "Pulling current roi (operator)..."
     git -C "${PROJECT_ROOT}" pull
-    ok "Текущий roi обновлён."
+    ok "Current roi updated."
 
     echo ""
-    ok "Цикл завершён. Оба инстанса синхронизированы."
+    ok "Cycle complete. Both instances synchronized."
 }
 
 # ─── Entry point ──────────────────────────────────────────────────────────────

@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Установка NVIDIA Container Toolkit (Ubuntu / Debian / WSL2)
+# Install NVIDIA Container Toolkit (Ubuntu / Debian / WSL2)
 set -euo pipefail
 
 echo "=== NVIDIA Container Toolkit ==="
 
-# Определяем дистрибутив
+# Determine distribution
 . /etc/os-release
 DISTRO="${ID}${VERSION_ID}"
 ARCH=$(dpkg --print-architecture 2>/dev/null || uname -m)
 
-echo "Дистрибутив: $DISTRO / $ARCH"
+echo "Distribution: $DISTRO / $ARCH"
 
-# Добавляем репозиторий NVIDIA
+# Add NVIDIA repository
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | \
   sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
 
@@ -22,10 +22,10 @@ curl -s -L "https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-conta
 sudo apt-get update -q
 sudo apt-get install -y nvidia-container-toolkit
 
-# Настраиваем Docker runtime
+# Configure Docker runtime
 sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 
 echo ""
-echo "Проверка:"
+echo "Verification:"
 docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi

@@ -23,83 +23,80 @@ development without losing control. And anyone curious how far a self-directed A
 
 ---
 
-*Русский: **Hive Drill** — самосовершенствующийся AI-пайплайн разработки. Фановый проект,
-полностью сделанный нейронками: спроектирован, написан, протестирован и поддерживается
-AI-агентами. Один инстанс дорабатывает другой, пушит изменения, пулит себя — по кругу.*
 
 ---
 
 ## Architecture constraints
 
-**Уже принято, не пересматривается:**
+**Already decided, not revisited:**
 
-- Архитектура: 3-слойная (UI → Orchestration → Agents → Tool-bus → Blueprints)
-- Pipeline состоит ровно из 7 стадий (0-6); добавление новых стадий — P0 решение
-- Vault — это Obsidian-совместимый Markdown, не кастомный формат
-- Canvas — JSON-формат Obsidian Canvas (nodes/edges), не другой формат
-- Агенты изолированы через git worktrees (один worktree на агента на задачу)
-- Gate (ворота одобрения) — обязательные на стадиях 1 и 5; нельзя пропускать без явного флага
+- Architecture: 3-layer (UI → Orchestration → Agents → Tool-bus → Blueprints)
+- Pipeline consists of exactly 7 stages (0-6); adding new stages is a P0 decision
+- Vault is Obsidian-compatible Markdown, not custom format
+- Canvas is Obsidian Canvas JSON format (nodes/edges), not another format
+- Agents are isolated via git worktrees (one worktree per agent per task)
+- Gate (approval gates) are mandatory at stages 1 and 5; cannot be skipped without explicit flag
 
-**Границы зон ответственности:**
+**Responsibility zone boundaries:**
 
-| Компонент | Отвечает за |
+| Component | Responsible for |
 |-----------|------------|
-| `scripts/go.sh` | Оркестрация pipeline (7 стадий) |
-| `scripts/new.sh` | Создание задачи (brief + канбан) |
-| `scripts/project.sh` | Управление проектами (add/switch/list/remove) |
-| `scripts/ai-check.sh` | Единый критерий done: lint + typecheck + tests + secrets |
-| `scripts/gate.sh` | Интерактивное одобрение артефактов |
-| `vault/projects/<name>/` | Изолированный Obsidian workspace для проекта |
-| `.ai/runs/<project>/<ID>/` | Все артефакты конкретного прогона |
-| `.ai/projects/<name>.json` | Реестр проектов (коммитится) |
-| `.ai/state/current` | Активный проект (локальное, не коммитится) |
-| `.ai/blueprints/` | Шаблоны pipeline (feature, bugfix, refactor, review, release) |
-| `llm/` | Локальный LLM стек (Harbor + TabbyAPI) |
-| `mcp/` | Конфигурация MCP серверов |
+| `scripts/go.sh` | Pipeline orchestration (7 stages) |
+| `scripts/new.sh` | Task creation (brief + kanban) |
+| `scripts/project.sh` | Project management (add/switch/list/remove) |
+| `scripts/ai-check.sh` | Single done criterion: lint + typecheck + tests + secrets |
+| `scripts/gate.sh` | Interactive artifact approval |
+| `vault/projects/<name>/` | Isolated Obsidian workspace for project |
+| `.ai/runs/<project>/<ID>/` | All artifacts from specific run |
+| `.ai/projects/<name>.json` | Project registry (committed) |
+| `.ai/state/current` | Active project (local, not committed) |
+| `.ai/blueprints/` | Pipeline templates (feature, bugfix, refactor, review, release) |
+| `llm/` | Local LLM stack (Harbor + TabbyAPI) |
+| `mcp/` | MCP server configuration |
 
-**Что нельзя трогать без явного решения:**
-- Формат frontmatter в артефактах (task_id, status, verdict — обязательные поля)
-- Структура `.ai/runs/<ID>/` (имена файлов — часть контракта между агентами)
-- Git дисциплина: worktrees, branch naming `agent/<TASK-ID>-<agent>`
+**What must not be touched without explicit decision:**
+- Artifact frontmatter format (task_id, status, verdict — required fields)
+- Structure of `.ai/runs/<ID>/` (file names are part of contract between agents)
+- Git discipline: worktrees, branch naming `agent/<TASK-ID>-<agent>`
 
 ---
 
 ## Tech stack
 
-| Компонент | Технология | Версия |
+| Component | Technology | Version |
 |-----------|------------|--------|
 | Pipeline runner | Bash | 5.x |
 | Task runner | [just](https://just.systems) | 1.x |
-| AI агенты | Claude Code CLI, Codex CLI | актуальные |
-| Local LLM | Harbor + TabbyAPI + llama.cpp | актуальные |
-| Kanban / docs | Obsidian (Markdown + Canvas JSON) | актуальные |
+| AI agents | Claude Code CLI, Codex CLI | current |
+| Local LLM | Harbor + TabbyAPI + llama.cpp | current |
+| Kanban / docs | Obsidian (Markdown + Canvas JSON) | current |
 | Canvas management | Python 3 (stdlib only) | 3.10+ |
 | MCP servers | Node.js / npx | LTS |
-| Claude Code hooks | GSD (get-shit-done) v1.30+ | глобально |
+| Claude Code hooks | GSD (get-shit-done) v1.30+ | globally |
 
 ---
 
 ## Build & test commands
 
 ```bash
-# Запустить все тесты
+# Run all tests
 bash tests/run_tests.sh
 
-# Запустить конкретный тест
+# Run specific test
 bash tests/run_tests.sh gate canvas
 
-# Валидация проекта (lint + typecheck + tests + secrets)
-./scripts/ai-check.sh              # полная проверка
-./scripts/ai-check.sh --quick      # только lint
-./scripts/ai-check.sh --tests-only # только тесты
+# Project validation (lint + typecheck + tests + secrets)
+./scripts/ai-check.sh              # full check
+./scripts/ai-check.sh --quick      # lint only
+./scripts/ai-check.sh --tests-only # tests only
 
-# Полный pipeline для задачи
+# Full pipeline for task
 just go TASK-ID
 
-# Инициализация
+# Initialization
 ./scripts/init.sh --all
 
-# Статус системы
+# System status
 just status
 ```
 
@@ -107,96 +104,96 @@ just status
 
 ## Coding standards
 
-- **Язык нового кода**: Bash (скрипты) + Python 3 (только stdlib, только для канваса)
-- **Именование**: UPPER_CASE для констант, lower_case для локальных переменных в Bash
-- **Все скрипты**: `set -euo pipefail` в начале
-- **Minимальное покрытие тестами**: каждая публичная функция скрипта + happy path + error path
-- **Тесты**: `tests/run_tests.sh` — встроенный test runner без внешних зависимостей
-- **Форматтер**: нет (bash — вручную, придерживаться стиля существующих скриптов)
-- **Secrets**: никогда не хардкодить, только через `.env` (проверяется в `ai-check.sh`)
+- **Language for new code**: Bash (scripts) + Python 3 (stdlib only, canvas only)
+- **Naming**: UPPER_CASE for constants, lower_case for local Bash variables
+- **All scripts**: `set -euo pipefail` at start
+- **Minimum test coverage**: each public script function + happy path + error path
+- **Tests**: `tests/run_tests.sh` — built-in test runner without external dependencies
+- **Formatter**: none (bash — manually, follow style of existing scripts)
+- **Secrets**: never hardcode, only via `.env` (verified in `ai-check.sh`)
 
 ---
 
 ## Writing standards (humanizer)
 
-**Обязательно** для всех текстовых артефактов, которые создаёт этот проект:
+**Mandatory** for all text artifacts created by this project:
 
-- Все `.md` документы pipeline (`plan.md`, `findings.md`, `pr-body.md`, `brief.md`, `tasks.md`)
-- Комментарии в коде, которые пишет агент
-- README и любая другая документация
+- All `.md` pipeline documents (`plan.md`, `findings.md`, `pr-body.md`, `brief.md`, `tasks.md`)
+- Code comments written by agents
+- README and any other documentation
 
-**Правило**: после написания любого документа или блока комментариев — пропусти через `/humanize` (GSD skill `humanizer`).
+**Rule**: after writing any document or block of comments — pass through `/humanize` (GSD skill `humanizer`).
 
 ```bash
-# После создания артефакта:
+# After creating artifact:
 /humanize .ai/runs/<TASK-ID>/plan.md
 /humanize .ai/runs/<TASK-ID>/findings.md
 /humanize .ai/runs/<TASK-ID>/pr-body.md
 ```
 
-**Зачем**: AI-генерированные тексты содержат характерные паттерны (inflated significance, AI vocabulary, em dash overuse и др.). Humanizer их убирает и добавляет живой голос.
+**Why**: AI-generated text contains characteristic patterns (inflated significance, AI vocabulary, em dash overuse, etc.). Humanizer removes them and adds human voice.
 
-**Когда НЕ применять**: frontmatter полей (task_id, status, verdict) — их не трогать.
+**When NOT to apply**: frontmatter fields (task_id, status, verdict) — do not touch them.
 
 ---
 
 ## GSD (get-shit-done) integration
 
-[GSD](https://github.com/gsd-build/get-shit-done) установлен **глобально** (`~/.claude/hooks/`).
-Автоматически активен для всех сессий Claude Code в этом проекте.
+[GSD](https://github.com/gsd-build/get-shit-done) is installed **globally** (`~/.claude/hooks/`).
+Automatically active for all Claude Code sessions in this project.
 
-**Что GSD добавляет к этому проекту:**
+**What GSD adds to this project:**
 
-| Hook | Когда | Что делает |
+| Hook | When | What it does |
 |------|-------|------------|
-| `gsd-context-monitor.js` | После каждого tool use | Предупреждает агента когда контекст < 35% / 25% |
-| `gsd-prompt-guard.js` | Перед Write/Edit в `.planning/` | Сканирует на prompt injection паттерны |
-| `gsd-statusline.js` | Всегда (statusline) | Показывает модель, контекст, директорию |
-| `gsd-check-update.js` | При старте сессии | Проверяет обновления GSD |
+| `gsd-context-monitor.js` | After each tool use | Warns agent when context < 35% / 25% |
+| `gsd-prompt-guard.js` | Before Write/Edit in `.planning/` | Scans for prompt injection patterns |
+| `gsd-statusline.js` | Always (statusline) | Shows model, context, directory |
+| `gsd-check-update.js` | At session start | Checks for GSD updates |
 
-**Для проекта**: GSD работает прозрачно. Дополнительной конфигурации не требует.
-Если хочешь использовать GSD workflow (`.planning/` директорию), добавь `.planning/` в `.gitignore`.
+**For this project**: GSD works transparently. No additional configuration needed.
+If you want to use GSD workflow (`.planning/` directory), add `.planning/` to `.gitignore`.
 
 ---
 
 ## What agents may NOT do without explicit approval
 
-- Изменять схему frontmatter артефактов (task_id, status, verdict)
-- Менять публичный API скриптов (сигнатуры, exit codes, имена файлов)
-- Удалять данные в production vault
-- Изменять CI/CD пайплайны
-- Коммитить secrets, ключи, credentials
-- Amend опубликованных коммитов
-- Изменять `BASE.md` (требует ревью человека, не агента)
+- Change artifact frontmatter schema (task_id, status, verdict)
+- Change public API of scripts (signatures, exit codes, file names)
+- Delete data in production vault
+- Change CI/CD pipelines
+- Commit secrets, keys, credentials
+- Amend published commits
+- Change `BASE.md` (requires human review, not agent)
 
 ---
 
 ## Definition of done
 
-Задача считается выполненной, когда:
-- [ ] `bash tests/run_tests.sh` проходит без ошибок
-- [ ] `./scripts/ai-check.sh` проходит без FAIL
-- [ ] Юнит-тесты написаны / обновлены для изменённых скриптов
-- [ ] `verification.md` заполнен в `.ai/runs/<TASK-ID>/`
-- [ ] `pr-body.md` готов
-- [ ] Нет закомментированного кода
-- [ ] Нет hardcoded secrets
+Task is considered complete when:
+- [ ] `bash tests/run_tests.sh` passes without errors
+- [ ] `./scripts/ai-check.sh` passes without FAIL
+- [ ] Unit tests written / updated for changed scripts
+- [ ] `verification.md` filled in `.ai/runs/<TASK-ID>/`
+- [ ] `pr-body.md` ready
+- [ ] No commented-out code
+- [ ] No hardcoded secrets
 
 ---
 
 ## Review rules
 
-1. Каждый PR должен иметь `pr-body.md` с мотивацией изменений.
-2. Breaking changes требуют явного обозначения в PR.
-3. Изменения в `.ai/base/BASE.md` требуют ревью человека, не агента.
+1. Every PR must have `pr-body.md` with motivation for changes.
+2. Breaking changes require explicit designation in PR.
+3. Changes to `.ai/base/BASE.md` require human review, not agent.
 
 ---
 
 ## Escalation policy
 
-| Ситуация | Действие |
+| Situation | Action |
 |---------|---------|
-| Security issue найден | Стоп, создать findings.md, эскалировать |
-| Неясная причина бага | Стоп, написать диагноз, спросить человека |
-| Требуется изменить схему артефактов | Стоп, написать migration plan, спросить |
-| Diff > 500 строк неожиданно | Проверить scope, возможно нужно разбить |
+| Security issue found | Stop, create findings.md, escalate |
+| Unclear bug cause | Stop, write diagnosis, ask human |
+| Artifact schema change needed | Stop, write migration plan, ask |
+| Diff > 500 lines unexpectedly | Check scope, may need to split |

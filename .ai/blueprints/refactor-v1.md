@@ -5,18 +5,18 @@
 ---
 
 ## Purpose
-Изменение структуры кода без изменения поведения.
+Change code structure without changing behavior.
 
-**Золотое правило:** поведение до = поведение после. Тесты до = тесты после.
-Рефакторинг без тестов — это просто изменение кода.
+**Golden rule:** behavior before = behavior after. Tests before = tests after.
+Refactoring without tests is just code change.
 
 ## Roles
 
-| Стадия | Владелец |
+| Stage | Owner |
 |--------|---------|
 | Scope definition | Claude Code |
 | Safety net check | Codex / scripts |
-| Execution | Codex (по шагам) |
+| Execution | Codex (step by step) |
 | Verification | scripts |
 | Architecture review | Claude Code |
 
@@ -24,59 +24,59 @@
 
 ## Stage 0: Scope definition
 
-**Выход:** `brief.md`
+**Output:** `brief.md`
 
 ```markdown
-# Brief: <TASK-ID> — Refactor: <описание>
+# Brief: <TASK-ID> — Refactor: <description>
 
 ## Motivation
-Почему нужен рефактор (tech debt, читаемость, производительность, coupling).
+Why refactor needed (tech debt, readability, performance, coupling).
 
 ## Scope
-### Что меняем
+### What we change
 - ...
-### Что НЕ меняем (поведение)
+### What we DON'T change (behavior)
 - ...
 ### Out of scope
 - ...
 
 ## Success metric
-Как измеримо улучшится ситуация после рефактора?
-(метрика сложности, покрытие, время сборки, etc.)
+How will situation measurably improve after refactor?
+(complexity metric, coverage, build time, etc.)
 
 ## Risks
-- Регрессии: ...
-- Объём diff: ожидаемый ~N строк
+- Regressions: ...
+- Diff size: expected ~N lines
 ```
 
-**СТОП если:**
-- Scope не определён чётко
-- Нет тестов для изменяемого кода (нужно сначала добавить)
-- Ожидаемый diff > 1000 строк (разбить на несколько задач)
+**STOP if:**
+- Scope not clearly defined
+- No tests for changed code (need to add first)
+- Expected diff > 1000 lines (split into multiple tasks)
 
 ---
 
 ## Stage 1: Safety net
 
-**Владелец:** Codex / scripts
-**Задача:** убедиться, что тесты покрывают изменяемый код
+**Owner:** Codex / scripts
+**Task:** ensure tests cover changed code
 
 ```bash
-# Покрытие до рефактора (зафиксировать)
+# Coverage before refactor (record)
 ./scripts/ai-check.sh --coverage > .ai/runs/<TASK-ID>/coverage-before.txt
 
-# Если покрытие < threshold → сначала добавить тесты
+# If coverage < threshold → first add tests
 ```
 
 ---
 
 ## Stage 2: Incremental execution
 
-**Правило:** рефактор делается шагами. Каждый шаг должен быть атомарным и верифицируемым.
+**Rule:** refactor done step by step. Each step must be atomic and verifiable.
 
-Типовые шаги (выбирать нужные):
+Typical steps (select needed ones):
 1. Extract method / function
-2. Rename (с поиском всех использований)
+2. Rename (with finding all uses)
 3. Move to module
 4. Split class / file
 5. Simplify condition
@@ -84,41 +84,41 @@
 7. Replace pattern
 
 ```bash
-# После каждого шага:
+# After each step:
 ./scripts/ai-check.sh
-git add -p && git commit -m "refactor: <описание шага>"
+git add -p && git commit -m "refactor: <step description>"
 ```
 
 ---
 
 ## Stage 3: Verification
 
-Дополнительно к стандартному:
+Additionally to standard:
 
 ```markdown
 ## Refactor-specific verification
-- [ ] Все тесты проходят (никакие не удалены)
-- [ ] Поведение не изменилось (acceptance test / smoke test)
-- [ ] Метрика улучшилась: <до> → <после>
-- [ ] Нет новых TODO без TICKET-ID
+- [ ] All tests pass (none deleted)
+- [ ] Behavior unchanged (acceptance test / smoke test)
+- [ ] Metric improved: <before> → <after>
+- [ ] No new TODO without TICKET-ID
 ```
 
 ---
 
 ## Stage 4: Architecture review
 
-**Выход:** `findings.md` с оценкой улучшений
+**Output:** `findings.md` with improvement assessment
 
 ```markdown
 ## Improvement assessment
-До: ...
-После: ...
+Before: ...
+After: ...
 
-## Была ли достигнута цель рефактора?
+## Was refactor goal achieved?
 
-## Новые риски?
+## New risks?
 
-## Рекомендации по следующим шагам
+## Recommendations for next steps
 ```
 
 ---
@@ -138,4 +138,4 @@ git add -p && git commit -m "refactor: <описание шага>"
 
 ## Writing standards
 
-После написания каждого документа — `/humanize`. См. BASE.md § Writing standards.
+After writing each document — `/humanize`. See BASE.md § Writing standards.

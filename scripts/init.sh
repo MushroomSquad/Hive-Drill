@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Инициализация / bootstrap for Hive Drill
+# Initialization / bootstrap for Hive Drill
 # Usage: ./scripts/init.sh [--mcp] [--llm] [--all]
 set -euo pipefail
 
@@ -53,37 +53,37 @@ fi
 echo ""
 
 # ── .env ──────────────────────────────────────────────────────────────
-info "Проверяю .env..."
+info "Checking .env..."
 if [ ! -f .env ]; then
   cp .env.example .env
-  warn ".env создан из .env.example — заполни переменные перед запуском агентов"
+  warn ".env created from .env.example — fill in variables before running agents"
 else
-  ok ".env существует"
+  ok ".env exists"
 fi
 
-# ── .ai/runs директория ───────────────────────────────────────────────
-info "Структура .ai/runs/..."
+# ── .ai/runs directory ───────────────────────────────────────────────
+info "Setting up .ai/runs/..."
 mkdir -p .ai/runs
-ok ".ai/runs/ готова"
+ok ".ai/runs/ ready"
 
 # ── Git ───────────────────────────────────────────────────────────────
-info "Проверяю git..."
+info "Checking git..."
 if ! git rev-parse --is-inside-work-tree &>/dev/null; then
   git init
-  ok "Git инициализирован"
+  ok "Git initialized"
 else
-  ok "Git репозиторий: $(git rev-parse --show-toplevel)"
+  ok "Git repository: $(git rev-parse --show-toplevel)"
 fi
 
-# ── Node.js (для MCP серверов) ────────────────────────────────────────
-info "Проверяю Node.js..."
+# ── Node.js (for MCP servers) ────────────────────────────────────────
+info "Checking Node.js..."
 if command -v node &>/dev/null; then
   ok "Node.js: $(node --version)"
 else
-  warn "Node.js не найден — MCP серверы на npx не будут работать"
+  warn "Node.js not found — MCP servers via npx will not work"
 fi
 
-# ── Зависимости агентов ───────────────────────────────────────────────
+# ── Agent dependencies ───────────────────────────────────────────────
 echo ""
 info "=== Dependencies ==="
 
@@ -124,13 +124,13 @@ check_cmd "claude" "Claude Code" "https://claude.ai/code"
 check_cmd "codex"  "Codex CLI"   "npm install -g @openai/codex"
 check_cmd "cursor" "Cursor"      "https://cursor.com (optional)"
 
-# ── MCP серверы ───────────────────────────────────────────────────────
+# ── MCP servers ───────────────────────────────────────────────────────
 if [ "$INIT_MCP" = true ]; then
   echo ""
-  info "=== Устанавливаю MCP серверы ==="
+  info "=== Installing MCP servers ==="
 
   if ! command -v npx &>/dev/null; then
-    warn "npx не найден — пропускаю MCP установку"
+    warn "npx not found — skipping MCP installation"
   else
     npm_pkgs=(
       "@modelcontextprotocol/server-github"
@@ -138,54 +138,54 @@ if [ "$INIT_MCP" = true ]; then
       "@modelcontextprotocol/server-memory"
     )
     for pkg in "${npm_pkgs[@]}"; do
-      info "Устанавливаю $pkg..."
-      npm install -g "$pkg" --silent && ok "$pkg" || warn "Не удалось установить $pkg"
+      info "Installing $pkg..."
+      npm install -g "$pkg" --silent && ok "$pkg" || warn "Failed to install $pkg"
     done
   fi
 fi
 
-# ── Локальный LLM стек ────────────────────────────────────────────────
+# ── Local LLM stack ────────────────────────────────────────────────
 if [ "$INIT_LLM" = true ]; then
   echo ""
-  info "=== Инициализирую локальный LLM стек ==="
+  info "=== Initializing local LLM stack ==="
   if [ -f llm/setup/install.sh ]; then
     bash llm/setup/install.sh
   else
-    warn "llm/setup/install.sh не найден"
+    warn "llm/setup/install.sh not found"
   fi
 fi
 
 # ── GSD (get-shit-done) ──────────────────────────────────────────────
 if [ "$INIT_GSD" = true ]; then
   echo ""
-  info "=== Устанавливаю GSD (get-shit-done) ==="
+  info "=== Installing GSD (get-shit-done) ==="
 
   GSD_HOOKS_DIR="${HOME}/.claude/hooks"
   GSD_DIR="${HOME}/.claude/get-shit-done"
 
   if [ -f "${GSD_HOOKS_DIR}/gsd-statusline.js" ]; then
-    ok "GSD уже установлен ($(cat "${GSD_DIR}/VERSION" 2>/dev/null || echo 'версия неизвестна'))"
+    ok "GSD already installed ($(cat "${GSD_DIR}/VERSION" 2>/dev/null || echo 'version unknown'))"
   else
     if ! command -v git &>/dev/null; then
-      warn "git не найден — пропускаю GSD установку"
+      warn "git not found — skipping GSD installation"
     elif ! command -v node &>/dev/null; then
-      warn "node не найден — пропускаю GSD установку"
+      warn "node not found — skipping GSD installation"
     else
       GSD_TMP=$(mktemp -d)
-      info "Клонирую GSD..."
+      info "Cloning GSD..."
       if git clone --depth=1 --quiet https://github.com/gsd-build/get-shit-done.git "${GSD_TMP}" 2>/dev/null; then
         if [ -f "${GSD_TMP}/install.sh" ]; then
-          bash "${GSD_TMP}/install.sh" --yes 2>/dev/null && ok "GSD установлен" || warn "GSD install.sh вернул ошибку"
+          bash "${GSD_TMP}/install.sh" --yes 2>/dev/null && ok "GSD installed" || warn "GSD install.sh returned error"
         else
-          # Ручная установка: копируем hooks и get-shit-done/
+          # Manual installation: copy hooks and get-shit-done/
           mkdir -p "${GSD_HOOKS_DIR}" "${GSD_DIR}"
           [ -d "${GSD_TMP}/hooks" ]           && cp -r "${GSD_TMP}/hooks/." "${GSD_HOOKS_DIR}/"
           [ -d "${GSD_TMP}/get-shit-done" ]   && cp -r "${GSD_TMP}/get-shit-done/." "${GSD_DIR}/"
-          ok "GSD файлы скопированы"
-          warn "Добавь хуки вручную: ~/.claude/settings.json → hooks"
+          ok "GSD files copied"
+          warn "Add hooks manually: ~/.claude/settings.json → hooks"
         fi
       else
-        warn "Не удалось клонировать GSD. Установи вручную: https://github.com/gsd-build/get-shit-done"
+        warn "Failed to clone GSD. Install manually: https://github.com/gsd-build/get-shit-done"
       fi
       rm -rf "${GSD_TMP}"
     fi
@@ -194,23 +194,23 @@ fi
 
 # ── just / make check ─────────────────────────────────────────────────
 echo ""
-info "=== Финальная проверка ==="
+info "=== Final check ==="
 if command -v just &>/dev/null; then
-  info "Доступные команды: just --list"
+  info "Available commands: just --list"
 fi
 
 echo ""
 echo "═══════════════════════════════════════"
-echo "  Готово. Следующие шаги:"
+echo "  Done. Next steps:"
 echo ""
-echo "  1. Заполни .env"
-echo "  2. Заполни .ai/base/BASE.md"
-echo "  3. just bp feature TASK-001  # запустить первый pipeline"
+echo "  1. Fill in .env"
+echo "  2. Fill in .ai/base/BASE.md"
+echo "  3. just bp feature TASK-001  # run first pipeline"
 echo ""
 if [ "$INIT_LLM" = false ]; then
-  echo "  Локальный LLM: ./scripts/init.sh --llm"
+  echo "  Local LLM: ./scripts/init.sh --llm"
 fi
 if [ "$INIT_MCP" = false ]; then
-  echo "  MCP серверы:   ./scripts/init.sh --mcp"
+  echo "  MCP servers:   ./scripts/init.sh --mcp"
 fi
 echo "═══════════════════════════════════════"

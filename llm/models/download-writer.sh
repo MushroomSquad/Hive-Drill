@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Скачивает модель для ТЗ/документации: Qwen2.5-14B-Instruct-exl2 @ 4_25
+# Download model for specs/documentation: Qwen2.5-14B-Instruct-exl2 @ 4_25
 set -euo pipefail
 
 MODEL="bartowski/Qwen2.5-14B-Instruct-exl2"
 BRANCH="4_25"
 DEST="${HF_MODELS_DIR:-./hf}"
 
-echo "=== Скачиваю: $MODEL @ $BRANCH ==="
-echo "Назначение: $DEST"
+echo "=== Downloading: $MODEL @ $BRANCH ==="
+echo "Destination: $DEST"
 echo ""
-echo "Ожидаемый размер: ~10–11 GB"
-echo "Важно: квант 4_25 на 12 GB VRAM — держи ctx <= 8192"
+echo "Expected size: ~10–11 GB"
+echo "Important: quantization 4_25 on 12 GB VRAM — keep ctx <= 8192"
 echo ""
 
 harbor hf dl \
@@ -19,5 +19,5 @@ harbor hf dl \
   -b "$BRANCH"
 
 echo ""
-echo "Готово. Следующий шаг:"
+echo "Done. Next step:"
 echo "  ./profiles/tabbyapi-writer.sh"

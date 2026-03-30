@@ -1,64 +1,64 @@
-# Подключение к Cursor
+# Connecting to Cursor
 
-## Ограничение Cursor
+## Cursor Limitation
 
-Cursor требует **публичный HTTPS URL** для кастомных endpoint'ов.
-`localhost` и LAN IP напрямую не работают.
+Cursor requires a **public HTTPS URL** for custom endpoints.
+`localhost` and LAN IP do not work directly.
 
-Поэтому нужен туннель.
+That's why you need a tunnel.
 
-## Шаги
+## Steps
 
-### 1. Поднять локальный стек
+### 1. Start the local stack
 
 ```bash
-# Запустить кодовую модель
+# Run the code model
 ./profiles/tabbyapi-coder.sh
 
-# Проверить
+# Verify
 curl http://localhost:33931/v1/models
 ```
 
-### 2. Пробросить туннель
+### 2. Create a tunnel
 
 ```bash
-# cloudflared (рекомендуется, бесплатно)
+# cloudflared (recommended, free)
 ./cursor/tunnel.sh tabbyapi cloudflared
 ```
 
-После запуска в консоли появится URL вида:
+After starting, a URL like this will appear in the console:
 ```
 https://something-random.trycloudflare.com
 ```
 
-### 3. Настроить Cursor
+### 3. Configure Cursor
 
-1. Открыть `Cursor Settings` → `Models`
-2. Прокрутить вниз до `OpenAI API Key`
-3. Включить **Override OpenAI Base URL**
-4. Вставить URL туннеля + `/v1`:
+1. Open `Cursor Settings` → `Models`
+2. Scroll down to `OpenAI API Key`
+3. Enable **Override OpenAI Base URL**
+4. Enter the tunnel URL + `/v1`:
    ```
    https://something-random.trycloudflare.com/v1
    ```
-5. API Key: можно любой непустой строкой (например `local`)
-6. Нажать `+ Add model`, ввести имя модели из списка:
+5. API Key: any non-empty string (e.g. `local`)
+6. Click `+ Add model`, enter a model name from the list:
    ```
    Qwen2.5-Coder-7B-Instruct-exl2
    ```
-7. Выбрать эту модель в чате
+7. Select this model in chat
 
-### 4. Если не работает
+### 4. Troubleshooting
 
-| Симптом | Решение |
-|---------|---------|
-| Agent mode падает с ошибкой формата | Переключись на **Ask mode** |
-| Таймаут | Включи **HTTP/1.1** в настройках |
-| "model not found" | Проверь точное имя через `curl .../v1/models` |
-| Туннель отвалился | URL cloudflared временный — перезапусти туннель и обнови URL в Cursor |
+| Symptom | Solution |
+|---------|----------|
+| Agent mode crashes with format error | Switch to **Ask mode** |
+| Timeout | Enable **HTTP/1.1** in settings |
+| "model not found" | Check the exact name via `curl .../v1/models` |
+| Tunnel dropped | Cloudflared URL is temporary — restart the tunnel and update the URL in Cursor |
 
-## Постоянный туннель (опционально)
+## Persistent Tunnel (optional)
 
-Для стабильного URL зарегистрируй бесплатный домен в Cloudflare и настрой Named Tunnel:
+For a stable URL, register a free domain in Cloudflare and set up a Named Tunnel:
 
 ```bash
 cloudflared tunnel login
@@ -66,16 +66,16 @@ cloudflared tunnel create local-llm
 cloudflared tunnel route dns local-llm llm.yourdomain.com
 ```
 
-Тогда URL будет постоянным: `https://llm.yourdomain.com/v1`
+Then the URL will be permanent: `https://llm.yourdomain.com/v1`
 
-## Безопасность
+## Security
 
-Туннель делает endpoint публичным. Если не хочешь этого:
-- Используй ngrok с паролем (`ngrok http --auth "user:pass" 33931`)
-- Или добавь API-ключ в TabbyAPI config и передавай его через Cursor
+The tunnel makes the endpoint public. If you don't want that:
+- Use ngrok with a password (`ngrok http --auth "user:pass" 33931`)
+- Or add an API key to the TabbyAPI config and pass it through Cursor
 
-## Альтернатива Cursor
+## Cursor Alternative
 
-Для локальной работы без туннеля используй:
+For local work without a tunnel use:
 - **Open WebUI** — `harbor up openwebui` → `http://localhost:8080`
-- **Continue.dev** (VSCode) — умеет работать с локальным endpoint напрямую
+- **Continue.dev** (VSCode) — can work with local endpoint directly

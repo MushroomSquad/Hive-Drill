@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# canvas-arch.sh — генерирует canvas-схему архитектуры проекта
-# Читает: README, pyproject.toml/package.json, структуру каталогов
-# Записывает: vault/canvas/project-arch.canvas
+# canvas-arch.sh — generates canvas diagram of project architecture
+# Reads: README, pyproject.toml/package.json, directory structure
+# Writes: vault/canvas/project-arch.canvas
 #
-# Использование:
-#   ./scripts/canvas-arch.sh                    — схема текущего проекта
-#   ./scripts/canvas-arch.sh /path/to/project   — схема внешнего проекта
-#   ./scripts/canvas-arch.sh --docs             — только обновить docs/ в vault
+# Usage:
+#   ./scripts/canvas-arch.sh                    — diagram of current project
+#   ./scripts/canvas-arch.sh /path/to/project   — diagram of external project
+#   ./scripts/canvas-arch.sh --docs             — update docs/ in vault only
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -54,7 +54,7 @@ info() { echo "  [arch] $*"; }
 ok()   { echo "  [OK]   $*"; }
 warn() { echo "  [WARN] $*"; }
 
-# ─── Собрать метаданные проекта ───────────────────────────────────────────────
+# ─── Collect project metadata ───────────────────────────────────────────────
 collect_metadata() {
     python3 - "${TARGET_PROJECT}" <<'PYEOF'
 import json, os, sys, re
@@ -122,11 +122,11 @@ for readme in ("README.md", "README.rst", "readme.md"):
     readme_path = root / readme
     if readme_path.exists():
         text = readme_path.read_text(encoding="utf-8", errors="ignore")
-        # Заголовки верхнего уровня как секции
+        # Top-level headers as sections
         sections = re.findall(r'^#{1,2}\s+(.+)', text, re.M)
         meta["readme_sections"] = sections[:10]
         if not meta["description"]:
-            # Первый абзац как описание
+            # First paragraph as description
             lines = text.split("\n")
             for i, line in enumerate(lines):
                 if line.startswith("#"): continue
@@ -135,14 +135,14 @@ for readme in ("README.md", "README.rst", "readme.md"):
                     break
         break
 
-# Структура каталогов (верхний уровень, кроме служебных)
+# Directory structure (top level, excluding utilities)
 skip = {".git", ".venv", "venv", "__pycache__", "node_modules", ".DS_Store",
         ".mypy_cache", ".ruff_cache", "dist", "build", ".pytest_cache"}
 dirs = []
 for item in sorted(root.iterdir()):
     if item.name in skip or item.name.startswith("."): continue
     if item.is_dir():
-        # Считаем вложенные файлы
+        # Count nested files
         n = sum(1 for _ in item.rglob("*") if _.is_file() and _.suffix in
                 (".py",".ts",".js",".go",".rs",".java",".sh",".md"))
         dirs.append({"name": item.name, "files": n})
@@ -159,7 +159,7 @@ print(json.dumps(meta, ensure_ascii=False))
 PYEOF
 }
 
-# ─── Генерировать canvas ──────────────────────────────────────────────────────
+# ─── Generate canvas ──────────────────────────────────────────────────────
 generate_canvas() {
     local meta_json="$1"
     local out_canvas="${CANVAS_DIR}/project-arch.canvas"
@@ -186,15 +186,15 @@ def edge(src, dst, label=""):
     if label: e["label"] = label
     edges.append(e)
 
-# Заголовок
+# Title
 node("title",
      f"# {meta['name']}\n{meta['description'][:80] if meta['description'] else ''}",
      300, -80, 400, 60, "6")
 
-# Язык / стек
-lang_text = f"## 🔧 Tech Stack\n\n**Язык:** {meta['language']}\n\n"
+# Language / stack
+lang_text = f"## 🔧 Tech Stack\n\n**Language:** {meta['language']}\n\n"
 if meta['deps']:
-    lang_text += "**Зависимости:**\n" + "\n".join(f"- `{d}`" for d in meta['deps'][:8])
+    lang_text += "**Dependencies:**\n" + "\n".join(f"- `{d}`" for d in meta['deps'][:8])
 node("stack", lang_text, 0, 20, 240, max(160, 60 + len(meta['deps'][:8]) * 22), "3")
 
 # Entry points
@@ -203,56 +203,56 @@ if meta["entry_points"]:
     node("entry", ep_text, 0, 250, 240, max(100, 40 + len(meta["entry_points"]) * 28), "1")
     edge("entry", "dirs-group")
 
-# Структура каталогов
+# Directory structure
 if meta["dirs"]:
-    dirs_text = "## 📁 Структура\n\n"
+    dirs_text = "## 📁 Structure\n\n"
     for d in meta["dirs"]:
         n = d["files"]
         bar = "█" * min(n // 5 + 1, 8)
-        dirs_text += f"`{d['name']}/` {bar} {n} файлов\n"
+        dirs_text += f"`{d['name']}/` {bar} {n} files\n"
     node("dirs-group", dirs_text, 300, 60, 260, max(140, 40 + len(meta["dirs"]) * 26), "5")
-    edge("stack", "dirs-group", "зависит")
+    edge("stack", "dirs-group", "depends")
 
-# README секции как карточки
+# README sections as cards
 if meta["readme_sections"]:
     sec_text = "## 📖 README\n\n" + "\n".join(f"- {s}" for s in meta["readme_sections"][:8])
     node("readme", sec_text, 620, 60, 220, max(120, 40 + len(meta["readme_sections"][:8]) * 24), "4")
     edge("dirs-group", "readme", "docs")
 
-# Scripts / команды
+# Scripts / commands
 if meta["scripts"]:
     sc_text = "## ⚡ Scripts\n\n" + "\n".join(f"`{s}`" for s in meta["scripts"][:6])
     node("scripts", sc_text, 300, 320, 200, max(120, 40 + len(meta["scripts"][:6]) * 26), "6")
     edge("stack", "scripts")
 
-# Тесты
+# Tests
 test_dirs = [d for d in meta["dirs"] if "test" in d["name"].lower()]
 if test_dirs:
-    t_text = "## 🧪 Tests\n\n" + "\n".join(f"`{d['name']}/` — {d['files']} файлов" for d in test_dirs)
+    t_text = "## 🧪 Tests\n\n" + "\n".join(f"`{d['name']}/` — {d['files']} files" for d in test_dirs)
     node("tests", t_text, 620, 320, 220, max(100, 40 + len(test_dirs) * 28), "1")
-    edge("dirs-group", "tests", "покрытие")
+    edge("dirs-group", "tests", "coverage")
 
 data = {"nodes": nodes, "edges": edges}
 with open(out_path, "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=2)
-print(f"[arch] Canvas записан: {out_path}")
+print(f"[arch] Canvas written: {out_path}")
 PYEOF
 
-    # Дублировать канвас в сам проект
+    # Duplicate canvas to project itself
     local project_docs="${TARGET_PROJECT}/docs"
     mkdir -p "${project_docs}"
     cp "${out_canvas}" "${project_docs}/architecture.canvas"
-    info "Canvas продублирован в проект: ${project_docs}/architecture.canvas"
+    info "Canvas duplicated to project: ${project_docs}/architecture.canvas"
 }
 
-# ─── Сохранить docs из README и BASE ─────────────────────────────────────────
+# ─── Save docs from README and BASE ─────────────────────────────────────────
 extract_docs() {
     local project="$1"
     local project_name
     project_name="$(basename "${project}")"
     local doc_file="${DOCS_DIR}/${project_name}.md"
 
-    info "Извлекаю документацию из ${project}…"
+    info "Extracting documentation from ${project}…"
 
     python3 - "${project}" "${doc_file}" "${project_name}" <<'PYEOF'
 import sys, re, os
@@ -283,7 +283,7 @@ for spec in (".ai/base/BASE.md", "AGENTS.md", "CLAUDE.md", "docs/architecture.md
         label = spec.split("/")[-1].replace(".md", "")
         sections.append(f"\n## {label}\n\n{text}")
 
-# pyproject.toml / package.json — зависимости
+# pyproject.toml / package.json — dependencies
 for dep_file in ("pyproject.toml", "package.json", "Cargo.toml", "go.mod"):
     p = project / dep_file
     if p.exists():
@@ -294,44 +294,44 @@ for dep_file in ("pyproject.toml", "package.json", "Cargo.toml", "go.mod"):
 content = "\n".join(sections)
 with open(out_path, "w", encoding="utf-8") as f:
     f.write(content)
-print(f"[arch] Docs записан: {out_path}")
+print(f"[arch] Docs written: {out_path}")
 
-# Полноценный обзорный документ в сам проект
+# Full overview document to project itself
 import os
 docs_dir = project / "docs"
 docs_dir.mkdir(exist_ok=True)
 overview_path = docs_dir / "overview.md"
 with open(overview_path, "w", encoding="utf-8") as f:
     f.write(content)
-print(f"[arch] Документация записана в проект: {overview_path}")
+print(f"[arch] Documentation written to project: {overview_path}")
 PYEOF
 }
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 if $DOCS_ONLY; then
     extract_docs "${TARGET_PROJECT}"
-    ok "Docs обновлены в ${DOCS_DIR}/"
+    ok "Docs updated in ${DOCS_DIR}/"
     exit 0
 fi
 
 if [[ -n "${ACTIVE_PROJECT_NAME}" ]]; then
-    info "Активный проект: ${ACTIVE_PROJECT_NAME} (${TARGET_PROJECT})"
+    info "Active project: ${ACTIVE_PROJECT_NAME} (${TARGET_PROJECT})"
 else
-    info "Анализирую проект: ${TARGET_PROJECT}"
+    info "Analyzing project: ${TARGET_PROJECT}"
 fi
 
 META_JSON="$(collect_metadata)"
 generate_canvas "${META_JSON}"
 extract_docs "${TARGET_PROJECT}"
 
-ok "Готово."
+ok "Done."
 echo ""
 echo "  Canvas:  ${CANVAS_DIR}/project-arch.canvas"
 echo "  Docs:    ${DOCS_DIR}/$(basename "${TARGET_PROJECT}").md"
 if [[ -n "${ACTIVE_PROJECT_NAME}" ]]; then
     echo ""
-    echo "  Открой в Obsidian: vault/projects/${ACTIVE_PROJECT_NAME}/canvas/project-arch.canvas"
+    echo "  Open in Obsidian: vault/projects/${ACTIVE_PROJECT_NAME}/canvas/project-arch.canvas"
 else
     echo ""
-    echo "  Открой в Obsidian: vault/canvas/project-arch.canvas"
+    echo "  Open in Obsidian: vault/canvas/project-arch.canvas"
 fi

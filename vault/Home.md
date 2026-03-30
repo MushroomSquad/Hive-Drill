@@ -1,15 +1,15 @@
 # 🐝 Hive Drill — Home
 
-## Доски
+## Boards
 
-- [[canvas/project-board|Project Board — Kanban задач]]
-- [[canvas/pipeline-flow|Pipeline Flow — 7 стадий]]
-- [[canvas/architecture|Architecture — Схема системы]]
-- [[canvas/project-arch|Project Arch — Схема текущего проекта]] *(генерируется: `just arch`)*
+- [[canvas/project-board|Project Board — Task Kanban]]
+- [[canvas/pipeline-flow|Pipeline Flow — 7 stages]]
+- [[canvas/architecture|Architecture — System diagram]]
+- [[canvas/project-arch|Project Arch — Current project diagram]] *(generated: `just arch`)*
 
 ---
 
-## Активные задачи
+## Active tasks
 
 ```dataview
 TABLE task_id, status, priority, owner
@@ -20,46 +20,46 @@ SORT priority ASC
 
 ---
 
-## Команды
+## Commands
 
-**Проекты**
+**Projects**
 
-| Команда | Что делает |
+| Command | What it does |
 |---|---|
-| `just project add <name> <path>` | Зарегистрировать проект |
-| `just project switch <name>` | Переключиться на проект |
-| `just project list` | Список всех проектов |
-| `just project current` | Активный проект |
-| `just project info` | Детали активного проекта |
+| `just project add <name> <path>` | Register project |
+| `just project switch <name>` | Switch to project |
+| `just project list` | List all projects |
+| `just project current` | Active project |
+| `just project info` | Active project details |
 
 **Pipeline**
 
-| Команда | Что делает |
+| Command | What it does |
 |---|---|
-| `just new TASK-ID` | Создать новую задачу (brief в inbox активного проекта) |
-| `just go TASK-ID` | Запустить полный pipeline |
-| `just go-from TASK-ID STAGE` | Продолжить с нужной стадии |
-| `just status` | Показать статус системы и активного проекта |
-| `just wt-list` | Список git worktrees |
-| `just arch` | Сгенерировать canvas-схему текущего проекта |
-| `just arch-of /path` | Сгенерировать схему внешнего проекта |
-| `just docs` | Обновить документацию в vault/docs/ |
+| `just new TASK-ID` | Create new task (brief in active project inbox) |
+| `just go TASK-ID` | Run full pipeline |
+| `just go-from TASK-ID STAGE` | Continue from a stage |
+| `just status` | Show system and project status |
+| `just wt-list` | List git worktrees |
+| `just arch` | Generate canvas diagram of current project |
+| `just arch-of /path` | Generate diagram of external project |
+| `just docs` | Update documentation in vault/docs/ |
 
 ---
 
-## Как работать
+## How to work
 
-1. **Создай задачу** — `just new FEAT-001` — откроется файл-шаблон в `00-inbox/`
-2. **Заполни brief** — опиши цель, скоуп, критерии приёмки
-3. **Смени статус** — `status: draft` → `status: ready` в frontmatter
-4. **Запусти pipeline** — `just go FEAT-001` — система пройдёт все стадии сама
-5. **Одобряй гейты** — на стадиях Plan и Review система остановится и покажет артефакт: `y` чтобы продолжить, `e` чтобы отредактировать, `n` чтобы прервать
+1. **Create a task** — `just new FEAT-001` — opens template file in `00-inbox/`
+2. **Fill in brief** — describe goal, scope, acceptance criteria
+3. **Change status** — `status: draft` → `status: ready` in frontmatter
+4. **Run pipeline** — `just go FEAT-001` — system goes through all stages automatically
+5. **Approve gates** — on Plan and Review stages system will stop and show artifact: `y` to continue, `e` to edit, `n` to stop
 
 ---
 
-## Стадии pipeline
+## Pipeline stages
 
-| # | Стадия | Агент | Гейт |
+| # | Stage | Agent | Gate |
 |---|---|---|---|
 | 0 | Brief | Human | — |
 | 1 | Plan | Claude | ⏸ Human approve |

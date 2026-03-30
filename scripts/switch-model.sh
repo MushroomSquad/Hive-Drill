@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# Быстрое переключение между профилями
-# Использование: ./scripts/switch-model.sh [coder|writer|llamacpp|airllm]
+# Quick switch between profiles
+# Usage: ./scripts/switch-model.sh [coder|writer|llamacpp|airllm]
 set -euo pipefail
 
 PROFILE="${1:-}"
 
 usage() {
-  echo "Использование: $0 <профиль>"
+  echo "Usage: $0 <profile>"
   echo ""
-  echo "Профили:"
-  echo "  coder     Qwen2.5-Coder-7B-Instruct-exl2 @ 6_5  (код, daily)"
-  echo "  writer    Qwen2.5-14B-Instruct-exl2 @ 4_25      (ТЗ, доки)"
-  echo "  llamacpp  llama.cpp router (GGUF, резервный)"
-  echo "  airllm    AirLLM тяжёлый режим (32B+)"
+  echo "Profiles:"
+  echo "  coder     Qwen2.5-Coder-7B-Instruct-exl2 @ 6_5  (code, daily)"
+  echo "  writer    Qwen2.5-14B-Instruct-exl2 @ 4_25      (specs, docs)"
+  echo "  llamacpp  llama.cpp router (GGUF, backup)"
+  echo "  airllm    AirLLM heavy mode (32B+)"
   echo ""
-  echo "Текущий статус:"
-  harbor ps 2>/dev/null || echo "(harbor не запущен)"
+  echo "Current status:"
+  harbor ps 2>/dev/null || echo "(harbor not running)"
 }
 
 if [ -z "$PROFILE" ]; then
@@ -25,27 +25,27 @@ fi
 
 case "$PROFILE" in
   coder)
-    echo "Переключаюсь на: Coder 7B (TabbyAPI)..."
+    echo "Switching to: Coder 7B (TabbyAPI)..."
     harbor down tabbyapi 2>/dev/null || true
     exec "$(dirname "$0")/../profiles/tabbyapi-coder.sh"
     ;;
   writer)
-    echo "Переключаюсь на: Writer 14B (TabbyAPI)..."
+    echo "Switching to: Writer 14B (TabbyAPI)..."
     harbor down tabbyapi 2>/dev/null || true
     exec "$(dirname "$0")/../profiles/tabbyapi-writer.sh"
     ;;
   llamacpp)
-    echo "Переключаюсь на: llama.cpp router..."
+    echo "Switching to: llama.cpp router..."
     harbor down tabbyapi 2>/dev/null || true
     exec "$(dirname "$0")/../profiles/llamacpp-router.sh"
     ;;
   airllm)
-    echo "Переключаюсь на: AirLLM (heavy)..."
+    echo "Switching to: AirLLM (heavy)..."
     harbor down tabbyapi 2>/dev/null || true
     exec "$(dirname "$0")/../profiles/airllm-heavy.sh"
     ;;
   *)
-    echo "Неизвестный профиль: $PROFILE"
+    echo "Unknown profile: $PROFILE"
     usage
     exit 1
     ;;

@@ -5,16 +5,16 @@
 ---
 
 ## Purpose
-Реализация новой функциональности от brief'а до готового PR.
+Implement new functionality from brief to ready PR.
 
 ## Roles
 
-| Стадия | Владелец | Инструмент |
+| Stage | Owner | Tool |
 |--------|---------|-----------|
 | Intake | Human / Cursor | — |
 | Architectural pass | Claude Code | opus / opusplan |
 | Task slicing | Claude Code | sonnet |
-| Execution | Codex | cloud-medium или local-fast |
+| Execution | Codex | cloud-medium or local-fast |
 | Verification | scripts | ai-check.sh |
 | Narrative review | Claude Code | sonnet |
 | PR packaging | Codex / Cursor | cloud-medium |
@@ -24,16 +24,16 @@
 
 ## Stage 0: Intake
 
-**Владелец:** Human / Cursor
-**Вход:** запрос (issue, комментарий, задача)
-**Выход:** `brief.md`
+**Owner:** Human / Cursor
+**Input:** request (issue, comment, task)
+**Output:** `brief.md`
 
-`brief.md` должен содержать:
+`brief.md` must contain:
 ```markdown
-# Brief: <TASK-ID> — <Название>
+# Brief: <TASK-ID> — <Title>
 
 ## Goal
-Что нужно сделать и зачем.
+What needs to be done and why.
 
 ## Scope
 ### In scope
@@ -42,9 +42,9 @@
 - ...
 
 ## Constraints
-- Нельзя трогать: ...
-- Дедлайн: ...
-- Зависит от: ...
+- Cannot touch: ...
+- Deadline: ...
+- Depends on: ...
 
 ## Affected modules
 - ...
@@ -57,23 +57,23 @@
 - [ ] ...
 ```
 
-**Criteria to proceed:** brief.md заполнен и все поля непусты.
+**Criteria to proceed:** brief.md filled and all fields non-empty.
 
 ---
 
 ## Stage 1: Architectural pass
 
-**Владелец:** Claude Code
-**Вход:** `brief.md`, доступ к codebase
-**Выход:** `plan.md`
+**Owner:** Claude Code
+**Input:** `brief.md`, access to codebase
+**Output:** `plan.md`
 
-Задачи:
-1. Прочитать релевантные файлы кодовой базы
-2. Оценить варианты реализации (минимум 2)
-3. Выбрать вариант и обосновать
-4. Выписать риски и rollback стратегию
+Tasks:
+1. Read relevant codebase files
+2. Evaluate implementation options (minimum 2)
+3. Choose option and justify
+4. List risks and rollback strategy
 
-`plan.md` структура:
+`plan.md` structure:
 ```markdown
 # Plan: <TASK-ID>
 
@@ -88,7 +88,7 @@ Pros: ... Cons: ...
 Pros: ... Cons: ...
 
 ## Chosen approach
-Option X, потому что...
+Option X, because...
 
 ## Implementation steps
 1. ...
@@ -104,26 +104,26 @@ Option X, потому что...
 - ...
 ```
 
-Параллельно с `plan.md` веди `decisions.md` — записывай каждое нетривиальное архитектурное решение по шаблону.
+In parallel with `plan.md` maintain `decisions.md` — record each non-trivial architecture decision per template.
 
-**Humanizer**: после написания `plan.md` — `/humanize .ai/runs/<TASK-ID>/plan.md`
+**Humanizer**: after writing `plan.md` — `/humanize .ai/runs/<TASK-ID>/plan.md`
 
-**Criteria to proceed:** plan.md утверждён (явно или через timeout без возражений).
+**Criteria to proceed:** plan.md approved (explicit or via timeout without objections).
 
 ---
 
 ## Stage 2: Task slicing
 
-**Владелец:** Claude Code / Cursor
-**Вход:** `plan.md`
-**Выход:** `tasks.yaml`
+**Owner:** Claude Code / Cursor
+**Input:** `plan.md`
+**Output:** `tasks.yaml`
 
 ```yaml
 run_id: <TASK-ID>
 blueprint: feature-v1
 tasks:
   - id: T1
-    title: <атомарная задача>
+    title: <atomic task>
     owner: codex          # codex | claude | cursor | human
     priority: p1          # p0 | p1 | p2 | p3
     model_lane: cloud     # cloud | local
@@ -138,50 +138,50 @@ tasks:
     ...
 ```
 
-**Правила нарезки:**
-- Каждая задача = один осмысленный коммит
-- P0 задачи не могут быть у Codex без проверки Claude
-- Задачи с `model_lane: local` должны подходить для P2/P3
+**Slicing rules:**
+- Each task = one meaningful commit
+- P0 tasks cannot be with Codex without Claude review
+- Tasks with `model_lane: local` must suit P2/P3
 
-**Criteria to proceed:** tasks.yaml утверждён, все T* атомарны.
+**Criteria to proceed:** tasks.yaml approved, all T* atomic.
 
 ---
 
 ## Stage 3: Isolated execution
 
-**Владелец:** Codex (P1/P2) или Claude Code (P0)
-**Вход:** `tasks.yaml`, код
-**Выход:** изменения в worktree
+**Owner:** Codex (P1/P2) or Claude Code (P0)
+**Input:** `tasks.yaml`, code
+**Output:** changes in worktree
 
 ```bash
-# Создать worktree для задачи
+# Create worktree for task
 ./scripts/worktree.sh create <TASK-ID>
 
-# Выполнить задачи Codex
-codex --profile cloud-medium "Execute T1: <описание>"
+# Execute Codex tasks
+codex --profile cloud-medium "Execute T1: <description>"
 
-# Проверка после каждой задачи
+# Check after each task
 ./scripts/ai-check.sh
 ```
 
-**Правила:**
-- Каждый агент работает в своём worktree
-- Не смешивать несколько T* в одном коммите без явной зависимости
-- Если `ai-check.sh` красный — стоп, не продолжать
+**Rules:**
+- Each agent works in own worktree
+- Don't mix multiple T* in one commit without explicit dependency
+- If `ai-check.sh` red — stop, don't continue
 
 ---
 
 ## Stage 4: Verification
 
-**Владелец:** scripts
-**Вход:** изменения в worktree
-**Выход:** `verification.md`
+**Owner:** scripts
+**Input:** changes in worktree
+**Output:** `verification.md`
 
 ```bash
 ./scripts/ai-check.sh 2>&1 | tee .ai/runs/<TASK-ID>/verification.md
 ```
 
-`verification.md` структура:
+`verification.md` structure:
 ```markdown
 # Verification: <TASK-ID>
 
@@ -191,28 +191,28 @@ codex --profile cloud-medium "Execute T1: <описание>"
 - tests: PASS / FAIL (N passed, M failed)
 
 ## Manual verification
-- [ ] feature работает как описано в brief.md
-- [ ] acceptance criteria выполнены
+- [ ] feature works as described in brief.md
+- [ ] acceptance criteria met
 
 ## Notes
 ...
 ```
 
-**Criteria to proceed:** все проверки PASS, acceptance criteria checklist заполнен.
+**Criteria to proceed:** all checks PASS, acceptance criteria checklist filled.
 
 ---
 
 ## Stage 5: Narrative review
 
-**Владелец:** Claude Code
-**Вход:** diff, `plan.md`, `verification.md`
-**Выход:** `findings.md`
+**Owner:** Claude Code
+**Input:** diff, `plan.md`, `verification.md`
+**Output:** `findings.md`
 
 ```markdown
 # Findings: <TASK-ID>
 
 ## Architecture assessment
-Не нарушена ли архитектура? Нет ли неожиданной сложности?
+Is architecture violated? Unexpected complexity?
 
 ## Technical debt introduced
 - ...
@@ -227,7 +227,7 @@ codex --profile cloud-medium "Execute T1: <описание>"
 APPROVED / NEEDS CHANGES / BLOCKED (reason)
 ```
 
-**Humanizer**: после написания `findings.md` — `/humanize .ai/runs/<TASK-ID>/findings.md`
+**Humanizer**: after writing `findings.md` — `/humanize .ai/runs/<TASK-ID>/findings.md`
 
 **Criteria to proceed:** verdict = APPROVED.
 
@@ -235,43 +235,43 @@ APPROVED / NEEDS CHANGES / BLOCKED (reason)
 
 ## Stage 6: PR packaging
 
-**Владелец:** Codex / Cursor
-**Вход:** diff, `brief.md`, `findings.md`
-**Выход:** `pr-body.md`, commit message
+**Owner:** Codex / Cursor
+**Input:** diff, `brief.md`, `findings.md`
+**Output:** `pr-body.md`, commit message
 
 ```markdown
 # pr-body.md
 
 ## Summary
-1-3 bullet points: что сделано и зачем.
+1-3 bullet points: what was done and why.
 
 ## Changes
-- `src/...`: что изменилось
-- `tests/...`: что покрыто
+- `src/...`: what changed
+- `tests/...`: what covered
 
 ## Test plan
-- [ ] Запустил ai-check.sh — зелёный
-- [ ] Проверил acceptance criteria из brief.md
-- [ ] Нет regression в смежных модулях
+- [ ] Ran ai-check.sh — green
+- [ ] Verified acceptance criteria from brief.md
+- [ ] No regression in adjacent modules
 
 ## Notes
 ...
 ```
 
-**Humanizer**: после написания `pr-body.md` — `/humanize .ai/runs/<TASK-ID>/pr-body.md`
+**Humanizer**: after writing `pr-body.md` — `/humanize .ai/runs/<TASK-ID>/pr-body.md`
 
 ---
 
 ## Stage 7: Retro
 
-**Владелец:** Human + Claude Code
-**Задача:** обновить систему на основе уроков
+**Owner:** Human + Claude Code
+**Task:** update system based on lessons
 
-Чеклист:
-- [ ] Нужно ли обновить BASE.md?
-- [ ] Нужно ли обновить этот blueprint?
-- [ ] Появились ли новые паттерны, достойные Skill?
-- [ ] Что пошло не так и почему?
+Checklist:
+- [ ] Need to update BASE.md?
+- [ ] Need to update this blueprint?
+- [ ] Did new patterns emerge worthy of Skill?
+- [ ] What went wrong and why?
 
 ---
 
@@ -281,11 +281,11 @@ APPROVED / NEEDS CHANGES / BLOCKED (reason)
 .ai/runs/<TASK-ID>/
   brief.md        ✅ Stage 0
   plan.md         ✅ Stage 1
-  decisions.md    ✅ Stage 1  (обновляй при каждом нетривиальном решении)
+  decisions.md    ✅ Stage 1  (update at each non-trivial decision)
   tasks.yaml      ✅ Stage 2
-  checkpoint.yml  ✅ каждый Stage (авто)
+  checkpoint.yml  ✅ each Stage (auto)
   verification.md ✅ Stage 4
   findings.md     ✅ Stage 5
   pr-body.md      ✅ Stage 6
-  retro.md        ✅ Stage 7 (опционально)
+  retro.md        ✅ Stage 7 (optional)
 ```

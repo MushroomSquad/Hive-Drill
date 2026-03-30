@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Тестирует endpoint с реальным запросом
-# Использование: ./scripts/test-endpoint.sh [tabbyapi|llamacpp|airllm]
+# Tests endpoint with real request
+# Usage: ./scripts/test-endpoint.sh [tabbyapi|llamacpp|airllm]
 set -euo pipefail
 
 TARGET="${1:-tabbyapi}"
@@ -19,28 +19,28 @@ case "$TARGET" in
     BASE_URL="$TARGET"
     ;;
   *)
-    echo "Неизвестный target. Используй: tabbyapi, llamacpp, airllm, или полный URL"
+    echo "Unknown target. Use: tabbyapi, llamacpp, airllm, or full URL"
     exit 1
     ;;
 esac
 
-echo "=== Тест endpoint: $BASE_URL ==="
+echo "=== Test endpoint: $BASE_URL ==="
 echo ""
 
-# 1. Список моделей
+# 1. Models list
 echo "1. GET /v1/models"
-MODELS=$(curl -sf "$BASE_URL/models") || { echo "FAIL: endpoint недоступен"; exit 1; }
+MODELS=$(curl -sf "$BASE_URL/models") || { echo "FAIL: endpoint unavailable"; exit 1; }
 echo "$MODELS" | python3 -c "
 import sys,json
 data = json.load(sys.stdin)
 models = data.get('data', [])
-print(f'  Найдено моделей: {len(models)}')
+print(f'  Models found: {len(models)}')
 for m in models:
     print(f'  - {m[\"id\"]}')
-" 2>/dev/null || echo "  (ответ получен, но не удалось разобрать JSON)"
+" 2>/dev/null || echo "  (response received, but failed to parse JSON)"
 echo ""
 
-# Берём первую модель из списка
+# Get first model from list
 MODEL_ID=$(echo "$MODELS" | python3 -c "
 import sys,json
 data = json.load(sys.stdin)
@@ -49,11 +49,11 @@ print(models[0]['id'] if models else '')
 " 2>/dev/null || echo "")
 
 if [ -z "$MODEL_ID" ]; then
-  echo "Нет загруженных моделей — пропускаю тест генерации"
+  echo "No loaded models — skipping generation test"
   exit 0
 fi
 
-# 2. Тест генерации
+# 2. Generation test
 echo "2. POST /v1/chat/completions (model: $MODEL_ID)"
 RESPONSE=$(curl -sf "$BASE_URL/chat/completions" \
   -H "Content-Type: application/json" \
@@ -71,9 +71,9 @@ echo "$RESPONSE" | python3 -c "
 import sys,json
 data = json.load(sys.stdin)
 content = data['choices'][0]['message']['content']
-print('  Ответ:')
+print('  Response:')
 print('  ' + content.strip().replace('\n', '\n  '))
-" 2>/dev/null || echo "  Ответ получен (не удалось разобрать)"
+" 2>/dev/null || echo "  Response received (failed to parse)"
 
 echo ""
-echo "Тест завершён."
+echo "Test complete."

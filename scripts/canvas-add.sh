@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# canvas-add.sh — добавляет новую карточку задачи в канбан-доску
-# Использование:
+# canvas-add.sh — adds new task card to kanban board
+# Usage:
 #   ./scripts/canvas-add.sh <TASK-ID> [type] [priority] [title] [lane]
 #
-# Пример:
-#   ./scripts/canvas-add.sh FEAT-001 feature p1 "Добавить OAuth" backlog
+# Example:
+#   ./scripts/canvas-add.sh FEAT-001 feature p1 "Add OAuth" backlog
 set -euo pipefail
 
 TASK_ID="${1:?Usage: $0 <TASK-ID> [type] [priority] [title] [lane]}"
@@ -27,7 +27,7 @@ else
     CANVAS="${PROJECT_ROOT}/vault/canvas/project-board.canvas"
 fi
 
-[[ -f "$CANVAS" ]] || { echo "[canvas] Canvas не найден: $CANVAS"; exit 0; }
+[[ -f "$CANVAS" ]] || { echo "[canvas] Canvas not found: $CANVAS"; exit 0; }
 
 python3 - "$CANVAS" "$TASK_ID" "$TYPE" "$PRIORITY" "$TITLE" "$LANE" <<'PYEOF'
 import json, sys, random, string
@@ -42,7 +42,7 @@ lane_x = {
     "done":      1140,
 }
 
-# Иконки типов
+# Type icons
 type_icon = {
     "feature":  "✨",
     "bugfix":   "🐛",
@@ -51,12 +51,12 @@ type_icon = {
     "release":  "🚀",
 }
 
-# Цвета по приоритету
+# Colors by priority
 priority_color = {
-    "p0": "1",  # красный
-    "p1": "3",  # жёлтый
-    "p2": "4",  # синий
-    "p3": "6",  # серый
+    "p0": "1",  # red
+    "p1": "3",  # yellow
+    "p2": "4",  # blue
+    "p3": "6",  # gray
 }
 
 with open(canvas_path, "r", encoding="utf-8") as f:
@@ -64,13 +64,13 @@ with open(canvas_path, "r", encoding="utf-8") as f:
 
 nodes = data.get("nodes", [])
 
-# Проверить что карточка уже не существует
+# Check if card already exists
 for node in nodes:
     if node.get("type") == "text" and task_id in node.get("text", ""):
-        print(f"[canvas] Карточка {task_id} уже существует, пропускаю.")
+        print(f"[canvas] Card {task_id} already exists, skipping.")
         sys.exit(0)
 
-# Найти занятые y позиции в этой колонке чтобы не перекрываться
+# Find occupied y positions in this column to avoid overlap
 x_target = lane_x.get(lane, 20)
 used_y = [
     n["y"] for n in nodes
@@ -80,7 +80,7 @@ used_y = [
 ]
 next_y = max(used_y, default=420) + 100 if used_y else 440
 
-# Генерируем уникальный id
+# Generate unique id
 node_id = "card-" + "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
 
 icon = type_icon.get(task_type, "📝")
@@ -106,5 +106,5 @@ data["nodes"] = nodes
 with open(canvas_path, "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=2)
 
-print(f"[canvas] Добавлена карточка {task_id} → {lane} (y={next_y})")
+print(f"[canvas] Added card {task_id} → {lane} (y={next_y})")
 PYEOF

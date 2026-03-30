@@ -1,5 +1,5 @@
 # Pipeline: Bugfix
-# Запуск: just bp bugfix <BUG-ID>
+# Run: just bp bugfix <BUG-ID>
 
 name: bugfix
 blueprint: bugfix-v1

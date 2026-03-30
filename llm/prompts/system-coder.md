@@ -1,6 +1,6 @@
-# Системный промпт: Кодер
+# System prompt: Coder
 
-Используется с: Qwen2.5-Coder-7B-Instruct / Qwen2.5-Coder-14B-Instruct
+Used with: Qwen2.5-Coder-7B-Instruct / Qwen2.5-Coder-14B-Instruct
 
 ---
 

@@ -1,6 +1,6 @@
-# Системный промпт: Архитектурный обзор / Ревью
+# System prompt: Architecture review
 
-Используется с: Qwen2.5-14B-Instruct или Qwen2.5-Coder-32B-Instruct (heavy)
+Used with: Qwen2.5-14B-Instruct or Qwen2.5-Coder-32B-Instruct (heavy)
 
 ---
 

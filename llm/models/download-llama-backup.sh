@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Скачивает быстрый резервный кодер: Meta-Llama-3.1-8B-Instruct-exl2 @ 6_5
+# Download fast fallback coder: Meta-Llama-3.1-8B-Instruct-exl2 @ 6_5
 set -euo pipefail
 
 MODEL="bartowski/Meta-Llama-3.1-8B-Instruct-exl2"
 BRANCH="6_5"
 DEST="${HF_MODELS_DIR:-./hf}"
 
-echo "=== Скачиваю: $MODEL @ $BRANCH ==="
-echo "Назначение: $DEST"
+echo "=== Downloading: $MODEL @ $BRANCH ==="
+echo "Destination: $DEST"
 echo ""
-echo "Ожидаемый размер: ~8 GB"
-echo "Назначение: быстрый резерв / черновики / объяснения"
+echo "Expected size: ~8 GB"
+echo "Purpose: fast fallback / drafts / explanations"
 echo ""
 
 harbor hf dl \
@@ -19,4 +19,4 @@ harbor hf dl \
   -b "$BRANCH"
 
 echo ""
-echo "Готово."
+echo "Done."

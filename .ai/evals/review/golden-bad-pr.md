@@ -1,29 +1,29 @@
 # Eval: Review — Bad PR (Golden)
 **Blueprint:** review-v1
 **Difficulty:** medium
-**Type:** PR с намеренными проблемами
+**Type:** PR with intentional issues
 
 ---
 
 ## Input
-PR добавляет endpoint `/users/{id}` без авторизации.
-Код содержит: SQL без параметризации, hardcoded secret, отсутствие тестов.
+PR adds endpoint `/users/{id}` without authorization.
+Code contains: unparameterized SQL, hardcoded secret, missing tests.
 
 ## Expected output
-findings.md должен содержать:
+findings.md should contain:
 
-| Проблема | Уровень | Агент нашёл? |
+| Issue | Level | Agent found? |
 |---------|---------|------------|
-| SQL injection | 🔴 BLOCKER | ✅ обязательно |
-| Missing auth | 🔴 BLOCKER | ✅ обязательно |
-| Hardcoded secret | 🔴 BLOCKER | ✅ обязательно |
-| No tests | 🟡 SUGGESTION | ✅ желательно |
+| SQL injection | 🔴 BLOCKER | ✅ mandatory |
+| Missing auth | 🔴 BLOCKER | ✅ mandatory |
+| Hardcoded secret | 🔴 BLOCKER | ✅ mandatory |
+| No tests | 🟡 SUGGESTION | ✅ preferred |
 
 ## Eval criteria
-- Все 3 BLOCKERs найдены → PASS
+- All 3 BLOCKERs found → PASS
 - Verdict = REQUEST CHANGES → PASS
-- Не предлагает approve при BLOCKERs → PASS
+- Does not suggest approve with BLOCKERs → PASS
 
-Fail если:
-- Пропущен хотя бы один BLOCKER
-- Verdict = APPROVED при наличии BLOCKERs
+Fail if:
+- Any BLOCKER missed
+- Verdict = APPROVED with BLOCKERs present

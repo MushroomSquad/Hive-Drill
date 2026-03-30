@@ -5,15 +5,15 @@
 ---
 
 ## Purpose
-Диагностика и исправление бага с обязательным воспроизводящим тестом.
+Diagnose and fix a bug with mandatory reproduction test.
 
-**Ключевое правило:** тест пишется ДО фикса. Если нет теста — нет фикса.
+**Key rule:** test is written BEFORE fix. No test — no fix.
 
 ## Roles
 
-| Стадия | Владелец |
+| Stage | Owner |
 |--------|---------|
-| Triage | Codex local (P2) или Claude (P0) |
+| Triage | Codex local (P2) or Claude (P0) |
 | Diagnosis | Claude Code |
 | Fix + Test | Codex |
 | Verification | scripts |
@@ -24,20 +24,20 @@
 
 ## Stage 0: Triage
 
-**Владелец:** Codex local-fast (P2) или Claude (если P0)
-**Выход:** `brief.md` с классификацией
+**Owner:** Codex local-fast (P2) or Claude (if P0)
+**Output:** `brief.md` with classification
 
 ```markdown
-# Brief: <BUG-ID> — <Описание бага>
+# Brief: <BUG-ID> — <Bug description>
 
 ## Symptom
-Что именно сломано, как воспроизвести.
+What is broken, how to reproduce.
 
 ## Priority
 P0 (critical) | P1 (important) | P2 (routine)
 
 ## Classification
-- [ ] Regression (что сломало?)
+- [ ] Regression (what broke it?)
 - [ ] Edge case
 - [ ] Integration issue
 - [ ] Data issue
@@ -52,13 +52,13 @@ P0 (critical) | P1 (important) | P2 (routine)
 3. Expected: ... / Actual: ...
 
 ## Risks
-- Затронутые пользователи: ...
-- Данные под угрозой: yes / no
+- Affected users: ...
+- Data at risk: yes / no
 ```
 
-**P0 триггеры** (→ немедленно эскалировать к Claude + человеку):
-- Утечка данных
-- Потеря данных
+**P0 triggers** (→ immediately escalate to Claude + human):
+- Data leak
+- Data loss
 - Security vulnerability
 - Production down
 
@@ -66,50 +66,50 @@ P0 (critical) | P1 (important) | P2 (routine)
 
 ## Stage 1: Diagnosis
 
-**Владелец:** Claude Code
-**Вход:** `brief.md`, codebase
-**Выход:** `plan.md` с root cause
+**Owner:** Claude Code
+**Input:** `brief.md`, codebase
+**Output:** `plan.md` with root cause
 
 ```markdown
 # Plan: <BUG-ID>
 
 ## Root cause
-Точная причина: где, почему, как воспроизводится.
+Exact cause: where, why, how to reproduce.
 
 ## Fix approach
-Минимальный фикс: что изменить.
+Minimal fix: what to change.
 
 ## Test strategy
-Воспроизводящий тест: как написать, чтобы он был красным ДО фикса.
+Reproduction test: how to write so it's RED BEFORE fix.
 
 ## Regression risk
-Что может сломаться рядом.
+What may break nearby.
 
 ## Rollback
-Как откатить если фикс сломает что-то ещё.
+How to rollback if fix breaks something else.
 ```
 
 ---
 
 ## Stage 2: Test-first execution
 
-**Владелец:** Codex
-**Порядок:**
-1. Написать воспроизводящий тест → убедиться что RED
-2. Написать минимальный фикс → убедиться что GREEN
-3. Запустить полный suite → убедиться нет регрессий
+**Owner:** Codex
+**Order:**
+1. Write reproduction test → ensure RED
+2. Write minimal fix → ensure GREEN
+3. Run full suite → ensure no regressions
 
 ```bash
-# T1: воспроизводящий тест (должен быть RED)
+# T1: reproduction test (must be RED)
 codex "Write a failing test that reproduces <BUG-ID> based on plan.md"
 
-# Проверяем что тест красный:
+# Check that test is red:
 ./scripts/ai-check.sh --tests-only
 
-# T2: фикс (тест должен стать GREEN)
+# T2: fix (test must turn GREEN)
 codex "Fix <BUG-ID> based on plan.md root cause"
 
-# Полная проверка:
+# Full check:
 ./scripts/ai-check.sh
 ```
 
@@ -117,35 +117,35 @@ codex "Fix <BUG-ID> based on plan.md root cause"
 
 ## Stage 3: Verification
 
-Аналогично feature-v1 Stage 4.
-Дополнительно в `verification.md`:
+Similar to feature-v1 Stage 4.
+Additionally in `verification.md`:
 
 ```markdown
 ## Bug-specific verification
-- [ ] Воспроизводящий тест был RED до фикса (подтверждено)
-- [ ] Воспроизводящий тест GREEN после фикса
-- [ ] Regression suite зелёный
-- [ ] Root cause задокументирован
+- [ ] Reproduction test was RED before fix (confirmed)
+- [ ] Reproduction test GREEN after fix
+- [ ] Regression suite green
+- [ ] Root cause documented
 ```
 
 ---
 
 ## Stage 4: Review
 
-**Владелец:** Claude Code
-**Выход:** `findings.md`
+**Owner:** Claude Code
+**Output:** `findings.md`
 
-Дополнительно к стандартным findings:
+Additionally to standard findings:
 
 ```markdown
 ## Root cause confirmed
 ...
 
 ## Systemic issue?
-Это единичный баг или симптом системной проблемы?
+Is this a single bug or symptom of systemic problem?
 
 ## Prevention
-Что добавить в BASE.md / ai-check / тесты, чтобы этот класс багов ловился раньше?
+What to add to BASE.md / ai-check / tests to catch this class of bugs earlier?
 ```
 
 ---
@@ -165,4 +165,4 @@ codex "Fix <BUG-ID> based on plan.md root cause"
 
 ## Writing standards
 
-После написания каждого документа — `/humanize`. См. BASE.md § Writing standards.
+After writing each document — `/humanize`. See BASE.md § Writing standards.

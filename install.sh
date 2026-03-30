@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # AI Dev OS — Bootstrap installer
 #
-# Локально:
+# Locally:
 #   bash install.sh
 #
-# Из репозитория (после публикации):
+# From repository (after publication):
 #   curl -fsSL https://raw.githubusercontent.com/YOU/ai-dev-os/main/install.sh | bash
 #
 set -euo pipefail
 
-# ─── Оформление ───────────────────────────────────────────────────────────────
+# ─── Styling ───────────────────────────────────────────────────────────────
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -23,7 +23,7 @@ fail()    { echo -e "  ${RED}✗${RESET}  $*"; }
 warn()    { echo -e "  ${YELLOW}!${RESET}  $*"; }
 info()    { echo -e "  ${DIM}→${RESET}  $*"; }
 section() { echo -e "\n${CYAN}${BOLD}── $* ──────────────────────────────────────────${RESET}"; }
-die()     { echo -e "\n${RED}${BOLD}Ошибка:${RESET} $*\n"; exit 1; }
+die()     { echo -e "\n${RED}${BOLD}Error:${RESET} $*\n"; exit 1; }
 
 ERRORS=()
 WARNINGS=()
@@ -31,7 +31,7 @@ WARNINGS=()
 need()  { ERRORS+=("$*"); }
 nudge() { WARNINGS+=("$*"); }
 
-# ─── Баннер ───────────────────────────────────────────────────────────────────
+# ─── Banner ───────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${CYAN}${BOLD}"
 echo "  ╔═══════════════════════════════════════════╗"
@@ -40,7 +40,7 @@ echo "  ║   Cursor · Codex · Claude · Local LLM    ║"
 echo "  ╚═══════════════════════════════════════════╝"
 echo -e "${RESET}"
 
-# ─── Определяем окружение ─────────────────────────────────────────────────────
+# ─── Detect environment ─────────────────────────────────────────────────────
 OS="linux"
 PKG=""
 IN_WSL=false
@@ -56,21 +56,21 @@ case "$(uname -s)" in
     ;;
 esac
 
-info "ОС: $OS$(${IN_WSL} && echo ' (WSL2)' || true)"
-info "Пакетный менеджер: ${PKG:-не определён}"
+info "OS: $OS$(${IN_WSL} && echo ' (WSL2)' || true)"
+info "Package manager: ${PKG:-not detected}"
 
-# ─── Где мы запущены ──────────────────────────────────────────────────────────
-# Если скрипт запущен через curl|bash, PROJECT_DIR = текущая папка
-# Если запущен из клонированного репо — его корень
+# ─── Where we are running ──────────────────────────────────────────────────────
+# If script runs via curl|bash, PROJECT_DIR = current folder
+# If run from cloned repo — its root
 SCRIPT_PATH="${BASH_SOURCE[0]:-}"
 if [[ -n "$SCRIPT_PATH" && -f "$SCRIPT_PATH" ]]; then
   PROJECT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 else
   PROJECT_DIR="$(pwd)"
 fi
-info "Директория проекта: $PROJECT_DIR"
+info "Project directory: $PROJECT_DIR"
 
-# ─── Установщик пакетов ───────────────────────────────────────────────────────
+# ─── Package installer ───────────────────────────────────────────────────────
 install_pkg() {
   local pkg="$1"
   case "$OS-$PKG" in
@@ -78,19 +78,19 @@ install_pkg() {
     linux-apt)      sudo apt-get install -y "$pkg" ;;
     linux-dnf)      sudo dnf install -y "$pkg" ;;
     linux-pacman)   sudo pacman -S --noconfirm "$pkg" ;;
-    *)              warn "Не знаю как установить '$pkg' — сделай вручную"; return 1 ;;
+    *)              warn "Don't know how to install '$pkg' — do it manually"; return 1 ;;
   esac
 }
 
-# ─── 1. Системные зависимости ─────────────────────────────────────────────────
-section "Системные зависимости"
+# ─── 1. System dependencies ─────────────────────────────────────────────────
+section "System dependencies"
 
 # Git
 if command -v git &>/dev/null; then
   ok "git $(git --version | grep -oP '[\d.]+')"
 else
-  info "Устанавливаю git..."
-  install_pkg git && ok "git установлен" || need "git — установи вручную"
+  info "Installing git..."
+  install_pkg git && ok "git installed" || need "git — install manually"
 fi
 
 # Python 3
@@ -98,15 +98,15 @@ if command -v python3 &>/dev/null; then
   PY_VER=$(python3 --version 2>&1 | grep -oP '[\d.]+')
   ok "python3 $PY_VER"
 else
-  need "python3 — установи: https://python.org"
+  need "python3 — install from: https://python.org"
 fi
 
 # Node.js / npm
 if command -v node &>/dev/null; then
   ok "node $(node --version)"
 else
-  warn "node не найден — нужен для MCP серверов и Codex"
-  nudge "node — установи: https://nodejs.org  или  nvm install --lts"
+  warn "node not found — required for MCP servers and Codex"
+  nudge "node — install from: https://nodejs.org  or  nvm install --lts"
 fi
 
 # Docker
@@ -114,10 +114,10 @@ if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
   ok "docker $(docker --version | grep -oP '[\d.]+')"
 else
   if command -v docker &>/dev/null; then
-    warn "docker найден, но не запущен"
-    nudge "запусти Docker Desktop или: sudo systemctl start docker"
+    warn "docker found, but not running"
+    nudge "start Docker Desktop or: sudo systemctl start docker"
   else
-    nudge "docker — нужен для локального LLM (Harbor). Установи: https://docs.docker.com/get-docker/"
+    nudge "docker — required for local LLM (Harbor). Install from: https://docs.docker.com/get-docker/"
   fi
 fi
 
@@ -125,16 +125,16 @@ fi
 if command -v just &>/dev/null; then
   ok "just $(just --version)"
 else
-  info "Устанавливаю just..."
+  info "Installing just..."
   JUST_OK=false
   if [[ "$OS" == "macos" ]] && command -v brew &>/dev/null; then
     brew install just && JUST_OK=true
   elif [[ "$OS" == "linux" ]]; then
-    # Пробуем cargo
+    # Try cargo
     if command -v cargo &>/dev/null; then
       cargo install just && JUST_OK=true
     else
-      # Бинарный релиз
+      # Binary release
       JUST_VER=$(curl -fsSL https://api.github.com/repos/casey/just/releases/latest \
         | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])" 2>/dev/null || echo "1.36.0")
       JUST_ARCH="x86_64-unknown-linux-musl"
@@ -143,23 +143,23 @@ else
       sudo mv /tmp/just /usr/local/bin/just && JUST_OK=true
     fi
   fi
-  ${JUST_OK} && ok "just установлен" || nudge "just — установи: cargo install just"
+  ${JUST_OK} && ok "just installed" || nudge "just — install with: cargo install just"
 fi
 
-# ─── 2. AI-инструменты ────────────────────────────────────────────────────────
-section "AI-инструменты"
+# ─── 2. AI tools ────────────────────────────────────────────────────────
+section "AI tools"
 
 # Claude Code
 if command -v claude &>/dev/null; then
   ok "Claude Code $(claude --version 2>/dev/null | head -1)"
 else
   if command -v npm &>/dev/null; then
-    info "Устанавливаю Claude Code..."
+    info "Installing Claude Code..."
     npm install -g @anthropic/claude-code 2>/dev/null \
-      && ok "Claude Code установлен" \
-      || nudge "Claude Code — установи вручную: npm install -g @anthropic/claude-code"
+      && ok "Claude Code installed" \
+      || nudge "Claude Code — install manually: npm install -g @anthropic/claude-code"
   else
-    nudge "Claude Code — нужен npm: npm install -g @anthropic/claude-code"
+    nudge "Claude Code — requires npm: npm install -g @anthropic/claude-code"
   fi
 fi
 
@@ -168,24 +168,24 @@ if command -v codex &>/dev/null; then
   ok "Codex $(codex --version 2>/dev/null | head -1)"
 else
   if command -v npm &>/dev/null; then
-    info "Устанавливаю Codex..."
+    info "Installing Codex..."
     npm install -g @openai/codex 2>/dev/null \
-      && ok "Codex установлен" \
-      || nudge "Codex — установи вручную: npm install -g @openai/codex"
+      && ok "Codex installed" \
+      || nudge "Codex — install manually: npm install -g @openai/codex"
   else
-    nudge "Codex — нужен npm: npm install -g @openai/codex"
+    nudge "Codex — requires npm: npm install -g @openai/codex"
   fi
 fi
 
-# Cursor (проверяем наличие, не устанавливаем)
+# Cursor (check presence, don't install)
 if command -v cursor &>/dev/null; then
   ok "Cursor"
 else
-  nudge "Cursor — скачай: https://cursor.com"
+  nudge "Cursor — download from: https://cursor.com"
 fi
 
-# ─── 3. MCP серверы ───────────────────────────────────────────────────────────
-section "MCP серверы"
+# ─── 3. MCP servers ───────────────────────────────────────────────────────────
+section "MCP servers"
 
 if command -v npm &>/dev/null; then
   MCP_PKGS=(
@@ -196,62 +196,62 @@ if command -v npm &>/dev/null; then
   for pkg in "${MCP_PKGS[@]}"; do
     name="${pkg##*/}"
     if npm list -g "$pkg" &>/dev/null 2>&1; then
-      ok "$name (уже установлен)"
+      ok "$name (already installed)"
     else
-      info "Устанавливаю $name..."
+      info "Installing $name..."
       npm install -g "$pkg" --silent 2>/dev/null \
         && ok "$name" \
-        || warn "$name — не удалось установить"
+        || warn "$name — installation failed"
     fi
   done
 else
-  nudge "MCP серверы — нужен npm"
+  nudge "MCP servers — requires npm"
 fi
 
-# ─── 4. Проект ────────────────────────────────────────────────────────────────
-section "Настройка проекта"
+# ─── 4. Project ────────────────────────────────────────────────────────────────
+section "Project setup"
 
 cd "$PROJECT_DIR"
 
 # .env
 if [[ -f .env ]]; then
-  ok ".env уже существует"
+  ok ".env already exists"
 else
   if [[ -f .env.example ]]; then
     cp .env.example .env
-    ok ".env создан из .env.example"
-    warn "Добавь GITHUB_TOKEN в .env (нужен для MCP)"
+    ok ".env created from .env.example"
+    warn "Add GITHUB_TOKEN to .env (required for MCP)"
   fi
 fi
 
-# Права на скрипты
+# Script permissions
 if [[ -d scripts ]]; then
-  chmod +x scripts/*.sh 2>/dev/null && ok "scripts/*.sh — исполняемые"
+  chmod +x scripts/*.sh 2>/dev/null && ok "scripts/*.sh — executable"
 fi
 if [[ -d llm ]]; then
-  find llm -name "*.sh" -exec chmod +x {} \; 2>/dev/null && ok "llm/**/*.sh — исполняемые"
+  find llm -name "*.sh" -exec chmod +x {} \; 2>/dev/null && ok "llm/**/*.sh — executable"
 fi
 
-# Структура vault
+# Vault structure
 mkdir -p vault/00-inbox vault/01-active vault/02-done
 [[ -f vault/01-active/.gitkeep ]] || touch vault/01-active/.gitkeep
 [[ -f vault/02-done/.gitkeep  ]] || touch vault/02-done/.gitkeep
-ok "vault/ структура готова"
+ok "vault/ structure ready"
 
 # .ai/runs
 mkdir -p .ai/runs
-ok ".ai/runs/ готова"
+ok ".ai/runs/ ready"
 
 # Git
 if git rev-parse --is-inside-work-tree &>/dev/null; then
-  ok "git репозиторий: $(git rev-parse --show-toplevel)"
+  ok "git repository: $(git rev-parse --show-toplevel)"
 else
   git init && git add -A && git commit -m "init: AI Dev OS" --quiet
-  ok "git инициализирован"
+  ok "git initialized"
 fi
 
-# ─── 5. NVIDIA / GPU (опционально) ───────────────────────────────────────────
-section "GPU (опционально)"
+# ─── 5. NVIDIA / GPU (optional) ───────────────────────────────────────────
+section "GPU (optional)"
 
 if command -v nvidia-smi &>/dev/null; then
   GPU=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)
@@ -260,88 +260,88 @@ if command -v nvidia-smi &>/dev/null; then
   if [[ "$OS" == "linux" ]] || ${IN_WSL}; then
     if docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 \
          nvidia-smi -L &>/dev/null 2>&1; then
-      ok "GPU доступна в Docker"
+      ok "GPU available in Docker"
     else
-      nudge "NVIDIA Container Toolkit — запусти: ./llm/setup/install-nvidia.sh"
+      nudge "NVIDIA Container Toolkit — run: ./llm/setup/install-nvidia.sh"
     fi
   fi
 else
-  info "NVIDIA GPU не обнаружена — локальный LLM будет на CPU (медленно)"
+  info "NVIDIA GPU not detected — local LLM will run on CPU (slow)"
 fi
 
-# ─── 6. Локальный LLM (Harbor) — опционально ─────────────────────────────────
-section "Локальный LLM (Harbor)"
+# ─── 6. Local LLM (Harbor) — optional ─────────────────────────────────────
+section "Local LLM (Harbor)"
 
 if command -v harbor &>/dev/null; then
-  ok "Harbor $(harbor --version 2>/dev/null || echo 'найден')"
+  ok "Harbor $(harbor --version 2>/dev/null || echo 'found')"
 else
   echo ""
-  echo -e "  Harbor нужен для локального LLM (TabbyAPI / llama.cpp)."
-  echo -e "  ${DIM}Без него Codex будет работать только через облако.${RESET}"
+  echo -e "  Harbor is required for local LLM (TabbyAPI / llama.cpp)."
+  echo -e "  ${DIM}Without it, Codex will only work through cloud.${RESET}"
   echo ""
-  read -r -p "  Установить Harbor сейчас? [y/N] " install_harbor
+  read -r -p "  Install Harbor now? [y/N] " install_harbor
   if [[ "${install_harbor,,}" == "y" ]]; then
     if command -v pipx &>/dev/null; then
-      pipx install llm-harbor && ok "Harbor установлен через pipx"
+      pipx install llm-harbor && ok "Harbor installed via pipx"
     elif command -v npm &>/dev/null; then
-      npm install -g @avcodes/harbor && ok "Harbor установлен через npm"
+      npm install -g @avcodes/harbor && ok "Harbor installed via npm"
     else
-      curl -fsSL https://av.codes/get-harbor.sh | bash && ok "Harbor установлен"
+      curl -fsSL https://av.codes/get-harbor.sh | bash && ok "Harbor installed"
     fi
   else
-    nudge "Harbor — установи позже: curl -fsSL https://av.codes/get-harbor.sh | bash"
+    nudge "Harbor — install later: curl -fsSL https://av.codes/get-harbor.sh | bash"
   fi
 fi
 
-# ─── 7. Авторизация агентов ───────────────────────────────────────────────────
-section "Авторизация агентов"
+# ─── 7. Agent authorization ───────────────────────────────────────────────────
+section "Agent authorization"
 
-# Claude Code — авторизуется через свой auth, не через .env
+# Claude Code — uses its own auth, not .env
 if command -v claude &>/dev/null; then
   if claude auth status &>/dev/null 2>&1; then
-    ok "Claude Code: авторизован"
+    ok "Claude Code: authorized"
   else
-    info "Авторизуй Claude Code:"
+    info "Authorize Claude Code:"
     echo ""
     echo -e "     ${CYAN}claude auth login${RESET}"
     echo ""
-    nudge "claude auth login — нужно для работы агента"
+    nudge "claude auth login — required for agent to work"
   fi
 fi
 
-# Codex — авторизуется через свой auth, не через .env
+# Codex — uses its own auth, not .env
 if command -v codex &>/dev/null; then
   if codex auth status &>/dev/null 2>&1; then
-    ok "Codex: авторизован"
+    ok "Codex: authorized"
   else
-    info "Авторизуй Codex:"
+    info "Authorize Codex:"
     echo ""
     echo -e "     ${CYAN}codex auth login${RESET}"
     echo ""
-    nudge "codex auth login — нужно для работы агента"
+    nudge "codex auth login — required for agent to work"
   fi
 fi
 
-# GitHub token — нужен только MCP-серверу
+# GitHub token — only needed for MCP server
 check_github_token() {
   local val=""
   val=$(grep -E "^GITHUB_TOKEN=.+" .env 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" || true)
   val="${val:-${GITHUB_TOKEN:-}}"
   if [[ -n "$val" && "$val" != "ghp_..." ]]; then
-    ok "GITHUB_TOKEN: задан (для MCP)"
+    ok "GITHUB_TOKEN: set (for MCP)"
   else
-    nudge "GITHUB_TOKEN — добавь в .env для MCP-сервера GitHub: https://github.com/settings/tokens (scope: repo)"
+    nudge "GITHUB_TOKEN — add to .env for GitHub MCP server: https://github.com/settings/tokens (scope: repo)"
   fi
 }
 check_github_token
 
-# ─── Итог ─────────────────────────────────────────────────────────────────────
+# ─── Summary ─────────────────────────────────────────────────────────────────────
 echo ""
-echo -e "${CYAN}${BOLD}── Итог ─────────────────────────────────────────────────────────${RESET}"
+echo -e "${CYAN}${BOLD}── Summary ─────────────────────────────────────────────────────────${RESET}"
 echo ""
 
 if [[ ${#ERRORS[@]} -gt 0 ]]; then
-  echo -e "  ${RED}${BOLD}Критические проблемы (нужно исправить):${RESET}"
+  echo -e "  ${RED}${BOLD}Critical issues (must fix):${RESET}"
   for e in "${ERRORS[@]}"; do
     fail "$e"
   done
@@ -349,7 +349,7 @@ if [[ ${#ERRORS[@]} -gt 0 ]]; then
 fi
 
 if [[ ${#WARNINGS[@]} -gt 0 ]]; then
-  echo -e "  ${YELLOW}${BOLD}Рекомендуется:${RESET}"
+  echo -e "  ${YELLOW}${BOLD}Recommended:${RESET}"
   for w in "${WARNINGS[@]}"; do
     warn "$w"
   done
@@ -357,29 +357,29 @@ if [[ ${#WARNINGS[@]} -gt 0 ]]; then
 fi
 
 if [[ ${#ERRORS[@]} -eq 0 ]]; then
-  echo -e "  ${GREEN}${BOLD}Установка завершена!${RESET}"
+  echo -e "  ${GREEN}${BOLD}Installation complete!${RESET}"
 else
-  echo -e "  ${YELLOW}Установка завершена с предупреждениями — часть функций недоступна.${RESET}"
+  echo -e "  ${YELLOW}Installation complete with warnings — some features unavailable.${RESET}"
 fi
 
-# ─── Следующие шаги ───────────────────────────────────────────────────────────
+# ─── Next steps ───────────────────────────────────────────────────────────
 echo ""
-echo -e "${CYAN}${BOLD}── Как начать работу ────────────────────────────────────────────${RESET}"
+echo -e "${CYAN}${BOLD}── How to get started ────────────────────────────────────────────${RESET}"
 echo ""
-echo -e "  ${BOLD}1. Открой vault в Obsidian:${RESET}"
+echo -e "  ${BOLD}1. Open vault in Obsidian:${RESET}"
 echo -e "     ${DIM}File → Open Vault → $(pwd)/vault${RESET}"
 echo ""
-echo -e "  ${BOLD}2. Авторизуй агентов (один раз):${RESET}"
+echo -e "  ${BOLD}2. Authorize agents (once):${RESET}"
 echo -e "     ${CYAN}claude auth login${RESET}"
 echo -e "     ${CYAN}codex auth login${RESET}"
 echo ""
-echo -e "  ${BOLD}3. Создай первую задачу:${RESET}"
+echo -e "  ${BOLD}3. Create first task:${RESET}"
 echo -e "     ${CYAN}just new FEAT-001${RESET}"
 echo ""
-echo -e "  ${BOLD}4. Заполни бриф в Obsidian → смени status: ready${RESET}"
+echo -e "  ${BOLD}4. Fill brief in Obsidian → change status: ready${RESET}"
 echo ""
-echo -e "  ${BOLD}5. Запусти пайплайн:${RESET}"
+echo -e "  ${BOLD}5. Run pipeline:${RESET}"
 echo -e "     ${CYAN}just go FEAT-001${RESET}"
 echo ""
-echo -e "  ${DIM}Полный список команд: just --list${RESET}"
+echo -e "  ${DIM}Full list of commands: just --list${RESET}"
 echo ""

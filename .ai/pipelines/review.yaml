@@ -1,5 +1,5 @@
 # Pipeline: Code Review
-# Запуск: just bp review <PR-ID>
+# Run: just bp review <PR-ID>
 
 name: review
 blueprint: review-v1

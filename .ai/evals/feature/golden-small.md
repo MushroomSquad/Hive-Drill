@@ -1,34 +1,34 @@
 # Eval: Feature — Small (Golden)
 **Blueprint:** feature-v1
 **Difficulty:** small
-**Type:** добавить простую утилиту
+**Type:** add simple utility
 
 ---
 
 ## Input
-Добавить функцию `chunk_list(lst, size)` которая разбивает список на части заданного размера.
+Add function `chunk_list(lst, size)` that splits list into chunks of given size.
 
 ## Expected artifacts
-- `brief.md` с заполненными всеми полями
-- `plan.md` с вариантами реализации
-- `tasks.yaml` с минимум 1 задачей
-- Реализация + тест
-- `verification.md`: все PASS
+- `brief.md` with all fields filled
+- `plan.md` with implementation options
+- `tasks.yaml` with at least 1 task
+- Implementation + test
+- `verification.md`: all PASS
 - `findings.md`: APPROVED
 
 ## Eval criteria
 
-| Критерий | Минимум | Хорошо |
+| Criterion | Minimum | Good |
 |---------|---------|--------|
-| brief.md заполнен | ✅ все поля | — |
-| Тест есть | ✅ проходит | Edge cases покрыты |
+| brief.md filled | ✅ all fields | — |
+| Test exists | ✅ passes | Edge cases covered |
 | ai-check.sh | ✅ PASS | — |
-| findings.md | ✅ APPROVED | Нет лишней критики |
-| Лишних изменений | 0 файлов кроме нужных | — |
+| findings.md | ✅ APPROVED | No excess criticism |
+| Extra changes | 0 files besides needed | — |
 
 ## Eval scoring
-- 0 = не выполнено
-- 1 = частично
-- 2 = полностью
+- 0 = not done
+- 1 = partially
+- 2 = completely
 
-Score >= 8/10 → blueprint рабочий для этого типа задач.
+Score >= 8/10 → blueprint works for this task type.

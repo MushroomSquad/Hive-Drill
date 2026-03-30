@@ -57,8 +57,8 @@ output2=$(cd "${TEST_TMPDIR}" && bash scripts/canvas-add.sh FEAT-001 feature p1 
 node_count2=$(python3 -c "import json; d=json.load(open('${CANVAS}')); print(len(d['nodes']))")
 assert_equals "1" "$node_count2"
 
-it "prints 'уже существует' on duplicate"
-assert_contains "уже существует" "$output2"
+it "prints 'already exists' on duplicate"
+assert_contains "already exists" "$output2"
 
 describe "canvas-add.sh — priority colors"
 
@@ -105,7 +105,7 @@ with open('${CANVAS}', 'w') as f:
 output=$(cd "${TEST_TMPDIR}" && bash scripts/canvas-move.sh FEAT-001 inprogress 2>&1)
 
 it "exits 0 (prints info, not error)"
-[[ "$output" != *"Canvas не найден"* ]] && { code=0; } || { code=1; }
+[[ "$output" != *"Canvas not found"* ]] && { code=0; } || { code=1; }
 assert_exit_ok $code
 
 it "moves card to inprogress column (x=580)"
@@ -119,7 +119,7 @@ code2=$?
 assert_exit_ok $code2
 
 it "prints warning for unknown lane"
-assert_contains "Неизвестная lane" "$output2"
+assert_contains "Unknown lane" "$output2"
 
 it "does not crash when card not found in canvas"
 output3=$(cd "${TEST_TMPDIR}" && bash scripts/canvas-move.sh NONEXISTENT-999 done 2>&1); code3=$?

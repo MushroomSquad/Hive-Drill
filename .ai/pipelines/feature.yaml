@@ -1,6 +1,6 @@
 # Pipeline: Feature
-# Запуск: just bp feature <TASK-ID>
-# или: ./scripts/blueprint-run.sh feature <TASK-ID>
+# Run: just bp feature <TASK-ID>
+# or: ./scripts/blueprint-run.sh feature <TASK-ID>
 
 name: feature
 blueprint: feature-v1
@@ -13,7 +13,7 @@ stages:
     outputs: [brief.md]
     skip_if_exists: true
     instructions: |
-      Создай .ai/runs/<RUN_ID>/brief.md по шаблону из feature-v1.md Stage 0.
+      Create .ai/runs/<RUN_ID>/brief.md per template from feature-v1.md Stage 0.
 
   - id: arch
     name: "Stage 1: Architectural pass"
@@ -45,7 +45,7 @@ stages:
   - id: exec
     name: "Stage 3: Execution"
     owner: codex
-    model: auto          # определяется из tasks.yaml model_lane
+    model: auto          # resolved from tasks.yaml model_lane
     depends_on: [slice]
     inputs: [tasks.yaml]
     outputs: [code_changes]

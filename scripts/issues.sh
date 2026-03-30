@@ -25,25 +25,25 @@ err()  { echo -e "  ${RED}✗${RESET} $*" >&2; }
 
 _check_deps() {
     local missing=0
-    command -v gh     &>/dev/null || { err "gh CLI не найден.  brew install gh / apt install gh"; missing=1; }
-    command -v fzf    &>/dev/null || { err "fzf не найден.     brew install fzf / apt install fzf"; missing=1; }
-    command -v claude &>/dev/null || { err "claude CLI не найден. https://claude.ai/code"; missing=1; }
+    command -v gh     &>/dev/null || { err "gh CLI not found.  brew install gh / apt install gh"; missing=1; }
+    command -v fzf    &>/dev/null || { err "fzf not found.     brew install fzf / apt install fzf"; missing=1; }
+    command -v claude &>/dev/null || { err "claude CLI not found. https://claude.ai/code"; missing=1; }
     [[ $missing -eq 0 ]] || exit 1
-    gh auth status &>/dev/null || { err "gh не авторизован. Запусти: gh auth login"; exit 1; }
+    gh auth status &>/dev/null || { err "gh not authorized. Run: gh auth login"; exit 1; }
 }
 
 _load_config() {
-    [[ -f "${SELF_CONFIG}" ]] || { err "Self config не найден. Запусти: just self init"; exit 1; }
+    [[ -f "${SELF_CONFIG}" ]] || { err "Self config not found. Run: just self init"; exit 1; }
     GITHUB_REPO="$(python3 -c "import json; print(json.load(open('${SELF_CONFIG}')).get('github_repo',''))")"
     PROJECT_NAME="$(python3 -c "import json; print(json.load(open('${SELF_CONFIG}')).get('project_name',''))")"
     WORKSPACE_PATH="$(python3 -c "import json; print(json.load(open('${SELF_CONFIG}')).get('workspace_path',''))")"
-    [[ -n "${GITHUB_REPO}" ]] || { err "github_repo не задан в config. Переинициализируй: just self init"; exit 1; }
+    [[ -n "${GITHUB_REPO}" ]] || { err "github_repo not set in config. Reinit: just self init"; exit 1; }
 }
 
 # ─── Fetch ────────────────────────────────────────────────────────────────────
 
 _fetch_issues() {
-    info "Забираю issues из ${GITHUB_REPO}..."
+    info "Fetching issues from ${GITHUB_REPO}..."
     gh issue list \
         --repo "${GITHUB_REPO}" \
         --state open \
@@ -56,11 +56,11 @@ _fetch_issues() {
 
 _analyze_issues() {
     local issues_json="$1"
-    info "Анализирую через Claude..."
+    info "Analyzing via Claude..."
 
     local count
     count=$(echo "${issues_json}" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
-    info "${count} issues — запускаю анализ..."
+    info "${count} issues — running analysis..."
 
     claude --print --no-markdown \
 "Analyze these GitHub issues for the roi project (AI Dev OS — shell-based AI development pipeline toolkit).
@@ -165,7 +165,7 @@ for i in issues:
     selected=$(echo "${fzf_lines}" | \
         fzf --multi \
             --ansi \
-            --header "TAB = выбрать/снять  ·  ENTER = подтвердить  ·  ESC = отмена" \
+            --header "TAB = select/deselect  ·  ENTER = confirm  ·  ESC = cancel" \
             --prompt "Issues → " \
             --delimiter $'\t' \
             --with-nth 1 \
@@ -204,12 +204,12 @@ _generate_brief() {
     local brief_path="${inbox}/${task_id}.md"
 
     if [[ -f "${brief_path}" ]]; then
-        warn "Brief уже существует: ${brief_path} — пропускаю генерацию"
+        warn "Brief already exists: ${brief_path} — skipping generation"
         echo "${brief_path}"
         return
     fi
 
-    info "Генерирую brief для #${issue_num}..."
+    info "Generating brief for #${issue_num}..."
 
     local today
     today="$(date +%Y-%m-%d)"
@@ -251,7 +251,7 @@ Issue data:
 ${issue_json}")
 
     echo "${brief_content}" > "${brief_path}"
-    ok "Brief создан: ${brief_path}"
+    ok "Brief created: ${brief_path}"
     echo "${brief_path}"
 }
 
@@ -279,7 +279,7 @@ cmd_run() {
     _load_config
 
     local issue_numbers=("$@")
-    [[ ${#issue_numbers[@]} -gt 0 ]] || { err "Укажи номера: just issues run 42 15 7"; exit 1; }
+    [[ ${#issue_numbers[@]} -gt 0 ]] || { err "Provide numbers: just issues run 42 15 7"; exit 1; }
 
     # Make roi-dev the active project so pipeline routes correctly
     echo -n "${PROJECT_NAME}" > "${PROJECT_ROOT}/.ai/state/current"
@@ -297,21 +297,21 @@ for i in json.load(sys.stdin):
         break
 ")
         if [[ -z "${issue_json}" ]]; then
-            warn "Issue #${num} не найден в открытых issues — пропускаю"
+            warn "Issue #${num} not found in open issues — skipping"
             continue
         fi
 
         local task_id="ISSUE-${num}"
         _generate_brief "${num}" "${issue_json}" > /dev/null
 
-        info "Запускаю pipeline: ${task_id}..."
+        info "Running pipeline: ${task_id}..."
         bash "${SCRIPT_DIR}/go.sh" "${task_id}"
-        ok "Pipeline завершён: ${task_id}"
+        ok "Pipeline completed: ${task_id}"
         echo ""
     done
 
-    ok "Все issues обработаны."
-    echo -e "  Зафиксировать и обновить: ${CYAN}just self sync${RESET}"
+    ok "All issues processed."
+    echo -e "  Commit and update: ${CYAN}just self sync${RESET}"
 }
 
 cmd_default() {
@@ -323,7 +323,7 @@ cmd_default() {
 
     local count
     count=$(echo "${issues_json}" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
-    ok "${count} открытых issues в ${GITHUB_REPO}"
+    ok "${count} open issues in ${GITHUB_REPO}"
 
     local analysis
     analysis="$(_analyze_issues "${issues_json}")"
@@ -332,14 +332,14 @@ cmd_default() {
     fzf_lines="$(_format_for_fzf "${issues_json}" "${analysis}")"
 
     echo ""
-    info "Выбери issues для работы (TAB = мультивыбор, ENTER = подтвердить)..."
+    info "Select issues to work on (TAB = multi-select, ENTER = confirm)..."
     echo ""
 
     local selected
     selected="$(_pick_issues "${issues_json}" "${fzf_lines}")"
 
     if [[ -z "${selected}" ]]; then
-        warn "Ничего не выбрано. Выход."
+        warn "Nothing selected. Exiting."
         exit 0
     fi
 
@@ -349,11 +349,11 @@ cmd_default() {
     done <<< "${selected}"
 
     echo ""
-    ok "Выбрано: ${#nums[@]} issue(s) — ${nums[*]}"
+    ok "Selected: ${#nums[@]} issue(s) — ${nums[*]}"
     echo ""
-    echo -n "  Запустить pipeline? [y/N] "
+    echo -n "  Run pipeline? [y/N] "
     read -r confirm
-    [[ "${confirm}" == "y" || "${confirm}" == "Y" ]] || { warn "Отменено."; exit 0; }
+    [[ "${confirm}" == "y" || "${confirm}" == "Y" ]] || { warn "Cancelled."; exit 0; }
 
     cmd_run "${nums[@]}"
 }

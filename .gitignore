@@ -1,10 +1,10 @@
-# ─── Секреты ────────────────────────────────────────────────────────
+# ─── Secrets ────────────────────────────────────────────────────────
 .env
 *.key
 *.pem
 *.p12
 
-# ─── Модели (большие файлы, не для git) ─────────────────────────────
+# ─── Models (large files, not for git) ─────────────────────────────
 llm/hf/
 llm/llamacpp/data/models/
 *.gguf
@@ -14,10 +14,10 @@ llm/llamacpp/data/models/
 *.pt
 *.ggml
 
-# ─── Worktrees (управляются git worktree) ───────────────────────────
+# ─── Worktrees (managed by git worktree) ───────────────────────────
 wt/
 
-# ─── Harbor данные ──────────────────────────────────────────────────
+# ─── Harbor data ──────────────────────────────────────────────────
 harbor_data/
 
 # ─── Python ─────────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ dist/
 node_modules/
 .npm/
 
-# ─── Логи ───────────────────────────────────────────────────────────
+# ─── Logs ───────────────────────────────────────────────────────────
 *.log
 logs/
 
@@ -54,16 +54,16 @@ Thumbs.db
 # ─── Project registry (.ai/projects/) — коммитится, содержит список проектов ─
 # (не игнорируем)
 
-# ─── Obsidian служебное ──────────────────────────────────────────────
+# ─── Obsidian utility ──────────────────────────────────────────────
 vault/.obsidian/workspace.json
 vault/.obsidian/workspace-mobile.json
 vault/.trash/
 
-# ─── Workspace — целевой проект (клонируется сюда) ──────────────────
+# ─── Workspace — target project (cloned here) ──────────────────
 workspace/
 .planning/
 
-# ─── Self-improve config (локальное) ───────────────────────────────
+# ─── Self-improve config (local) ───────────────────────────────
 .ai/self/
 
 # Obsidian personal appearance settings

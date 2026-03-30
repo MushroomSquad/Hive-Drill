@@ -1,39 +1,39 @@
-# TabbyAPI конфигурация
-# Документация: https://github.com/theroyallab/tabbyAPI
+# TabbyAPI configuration
+# Documentation: https://github.com/theroyallab/tabbyAPI
 
-# Директории
+# Directories
 model_dir: /app/data/models
 draft_model_dir: /app/data/draft_models
 
-# Загрузка модели по умолчанию (переопределяется через harbor tabbyapi model <...>)
+# Default model loading (overridden via harbor tabbyapi model <...>)
 # model_name: Qwen2.5-Coder-7B-Instruct-exl2
 
-# Контекст
-# Примечание: для 12 GB VRAM начинай с 8192, можно поднять до 16384 с кодером 7B
+# Context
+# Note: for 12 GB VRAM start with 8192, can increase to 16384 with 7B coder
 max_seq_len: 8192
 
 # GPU
 gpu_split_auto: true
-# gpu_split: [12]  # GB VRAM — можно задать явно
+# gpu_split: [12]  # GB VRAM — can be set explicitly
 
-# Генерация
-max_batch_size: 1  # один пользователь
+# Generation
+max_batch_size: 1  # single user
 stream_interval: 1
 
-# Кэш (ускоряет повторяющиеся системные промпты / длинные контексты)
+# Cache (speeds up repeated system prompts / long contexts)
 cache_size: 4096
-cache_mode: Q4   # Q4 cache — экономит VRAM
+cache_mode: Q4   # Q4 cache — saves VRAM
 
-# Speculative decoding (опционально — требует draft model)
+# Speculative decoding (optional — requires draft model)
 # draft_model_name: Qwen2.5-Coder-1.5B-Instruct-exl2
 # speculative_ngram: false
 
 # API
 host: 0.0.0.0
 port: 5000
-disable_auth: true  # внутреннее использование, не открывать наружу без auth
+disable_auth: true  # internal use, do not expose externally without auth
 
-# Логирование
+# Logging
 log_level: info
 log_prompt: false
 log_generation_params: false

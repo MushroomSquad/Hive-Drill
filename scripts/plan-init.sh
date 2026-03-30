@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Инициализирует директорию артефактов для нового прогона pipeline
-# Использование: ./scripts/plan-init.sh <TASK-ID> [blueprint]
+# Initializes artifacts directory for new pipeline run
+# Usage: ./scripts/plan-init.sh <TASK-ID> [blueprint]
 set -euo pipefail
 
 TASK_ID="${1:?Usage: $0 <TASK-ID> [blueprint]}"
@@ -9,24 +9,24 @@ RUN_DIR=".ai/runs/$TASK_ID"
 DATE=$(date +%Y-%m-%d)
 
 if [ -d "$RUN_DIR" ]; then
-  echo "Run уже существует: $RUN_DIR"
-  echo "Продолжить? (y/N)"
+  echo "Run already exists: $RUN_DIR"
+  echo "Continue? (y/N)"
   read -r ans
   [[ "$ans" =~ ^[Yy]$ ]] || exit 0
 fi
 
 mkdir -p "$RUN_DIR"
 
-echo "Создаю: $RUN_DIR"
+echo "Creating: $RUN_DIR"
 
-# brief.md — шаблон для заполнения
+# brief.md — template to fill in
 cat > "$RUN_DIR/brief.md" << BRIEF
 # Brief: $TASK_ID
 
-_Создан: $DATE | Blueprint: $BLUEPRINT
+_Created: $DATE | Blueprint: $BLUEPRINT
 
 ## Goal
-<!-- Что нужно сделать и зачем -->
+<!-- What needs to be done and why -->
 
 ## Scope
 ### In scope
@@ -36,7 +36,7 @@ _Создан: $DATE | Blueprint: $BLUEPRINT
 -
 
 ## Constraints
-<!-- Что нельзя трогать, дедлайн, зависимости -->
+<!-- What can't be changed, deadline, dependencies -->
 
 ## Affected modules
 -
@@ -48,7 +48,7 @@ _Создан: $DATE | Blueprint: $BLUEPRINT
 - [ ]
 BRIEF
 
-# tasks.yaml — шаблон
+# tasks.yaml — template
 cat > "$RUN_DIR/tasks.yaml" << TASKS
 run_id: $TASK_ID
 blueprint: ${BLUEPRINT}-v1
@@ -56,10 +56,10 @@ created: $DATE
 status: draft
 
 tasks: []
-# Заполняется на Stage 2 (task slicing)
-# Шаблон:
+# Filled at Stage 2 (task slicing)
+# Template:
 #   - id: T1
-#     title: <описание>
+#     title: <description>
 #     owner: codex        # codex | claude | cursor | human
 #     priority: p1        # p0 | p1 | p2 | p3
 #     model_lane: cloud   # cloud | local
@@ -68,7 +68,7 @@ tasks: []
 #     depends_on: []
 TASKS
 
-# decisions.md — лог архитектурных решений
+# decisions.md — architecture decisions log
 cat > "$RUN_DIR/decisions.md" << DECISIONS
 ---
 task_id: $TASK_ID
@@ -77,24 +77,24 @@ created: $DATE
 
 # Decisions: $TASK_ID
 
-<!-- Добавляй запись каждый раз, когда принимается нетривиальное решение. -->
+<!-- Add entry each time a non-trivial decision is made. -->
 
 ## Decision log
 
-### DEC-1: [Краткое название решения]
+### DEC-1: [Decision name]
 
 **Date:** $DATE
 **Status:** accepted
 
 **Context**
-Почему потребовалось принять это решение?
+Why was this decision needed?
 
 **Options considered**
 - Option A —
 - Option B —
 
 **Decision**
-Выбрали [Option X], потому что...
+Chose [Option X], because...
 
 **Consequences**
 - Positive:
@@ -106,7 +106,7 @@ echo "✓ $RUN_DIR/brief.md"
 echo "✓ $RUN_DIR/tasks.yaml"
 echo "✓ $RUN_DIR/decisions.md"
 echo ""
-echo "Следующие шаги:"
-echo "1. Заполни $RUN_DIR/brief.md"
-echo "2. Запусти blueprint: just bp $BLUEPRINT $TASK_ID"
-echo "   или вручную: claude 'Read .ai/blueprints/${BLUEPRINT}-v1.md and .ai/runs/$TASK_ID/brief.md'"
+echo "Next steps:"
+echo "1. Fill in $RUN_DIR/brief.md"
+echo "2. Run blueprint: just bp $BLUEPRINT $TASK_ID"
+echo "   or manually: claude 'Read .ai/blueprints/${BLUEPRINT}-v1.md and .ai/runs/$TASK_ID/brief.md'"

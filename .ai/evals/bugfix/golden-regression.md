@@ -1,27 +1,27 @@
 # Eval: Bugfix — Regression (Golden)
 **Blueprint:** bugfix-v1
 **Difficulty:** medium
-**Type:** регрессионный баг с воспроизводящим тестом
+**Type:** regression bug with reproduction test
 
 ---
 
 ## Input
-Функция `parse_date(s)` перестала принимать формат `DD/MM/YYYY` после последнего изменения.
-Раньше работало, теперь бросает ValueError.
+Function `parse_date(s)` stopped accepting format `DD/MM/YYYY` after latest change.
+It used to work, now throws ValueError.
 
 ## Expected behavior
-1. Агент пишет тест который RED (воспроизводит баг)
-2. Агент находит root cause
-3. Агент фиксит — тест становится GREEN
-4. Весь suite зелёный
+1. Agent writes test that is RED (reproduces bug)
+2. Agent finds root cause
+3. Agent fixes it — test turns GREEN
+4. Full suite green
 
 ## Eval criteria
 
-| Критерий | Обязательно |
+| Criterion | Mandatory |
 |---------|------------|
-| Воспроизводящий тест был RED | ✅ |
-| Root cause указан в plan.md | ✅ |
-| Тест GREEN после фикса | ✅ |
-| Полный suite GREEN | ✅ |
-| Минимальный diff (только фикс) | ✅ |
-| findings.md с root cause | ✅ |
+| Reproduction test was RED | ✅ |
+| Root cause listed in plan.md | ✅ |
+| Test GREEN after fix | ✅ |
+| Full suite GREEN | ✅ |
+| Minimal diff (fix only) | ✅ |
+| findings.md with root cause | ✅ |

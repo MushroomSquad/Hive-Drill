@@ -10,124 +10,124 @@ extracted: 2026-03-24 20:59
 
 # AI Dev OS
 
-Производственная система разработки с AI: Cursor + Warp + Codex + Claude Code + локальный LLM стек.
+Production development system with AI: Cursor + Warp + Codex + Claude Code + local LLM stack.
 
-Не набор инструментов, а **фабрика повторяемой разработки** с blueprint-пайплайнами, роутингом задач по приоритету и постоянной памятью проекта.
+Not a set of tools, but a **factory for repeatable development** with blueprint pipelines, priority-based task routing, and persistent project memory.
 
 ---
 
-## Архитектура системы
+## System architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  UI-слой          Cursor (редактор, ревью, ручная коррекция) │
+│  UI layer         Cursor (editor, review, manual fixes)      │
 ├─────────────────────────────────────────────────────────────┤
-│  Orchestration    Warp / Oz (терминал, pipeline runner, CI)  │
+│  Orchestration    Warp / Oz (terminal, pipeline runner, CI)  │
 ├─────────────────────────────────────────────────────────────┤
-│  Агенты           Claude Code (архитект) │ Codex (исполнитель)│
+│  Agents           Claude Code (architect) │ Codex (executor)  │
 ├─────────────────────────────────────────────────────────────┤
 │  Tool-bus         MCP (GitHub, Linear, Postgres, Browser...) │
 ├─────────────────────────────────────────────────────────────┤
-│  Blueprints       .ai/ (пайплайны, скиллы, память, ранзы)   │
+│  Blueprints       .ai/ (pipelines, skills, memory, ranks)    │
 ├─────────────────────────────────────────────────────────────┤
 │  Local LLM        llm/ (Harbor + TabbyAPI + llama.cpp)       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Роли агентов
+## Agent roles
 
-| Агент | Роль | Приоритеты |
+| Agent | Role | Priorities |
 |-------|------|-----------|
-| **Claude Code** | Архитектор, длинный мыслитель | P0: critical, P1: plan+review |
-| **Codex** | Исполнитель, быстрый инженер | P1: implementation, P2: routine |
-| **Cursor** | Кабина пилота, ревью, ручная коррекция | все |
-| **Warp/Oz** | Диспетчерская, pipeline runner | all automation |
-| **Local LLM** | Локальный backend для P2/P3 задач | P2: routine, P3: background |
+| **Claude Code** | Architect, long-horizon thinker | P0: critical, P1: plan+review |
+| **Codex** | Executor, fast engineer | P1: implementation, P2: routine |
+| **Cursor** | Cockpit, review, manual fixes | all |
+| **Warp/Oz** | Dispatcher, pipeline runner | all automation |
+| **Local LLM** | Local backend for P2/P3 tasks | P2: routine, P3: background |
 
-## Маршрутизация задач
+## Task routing
 
-| Приоритет | Тип задачи | Агент | Модель |
+| Priority | Task type | Agent | Model |
 |-----------|-----------|-------|--------|
 | **P0** critical | security, migration, architecture | Claude Code | opus/opusplan |
 | **P1** standard | feature, refactor, integration | Claude Sonnet + Codex cloud | cloud-medium |
 | **P2** routine | boilerplate, docs, simple tests | Codex local | local-fast |
 | **P3** background | triage, changelogs, search | Codex local | local-cheap |
 
-## Структура проекта
+## Project structure
 
 ```
 .ai/
-  base/          — канон: правила, архитектура, критерии done
-  blueprints/    — шаблоны пайплайнов (feature, bugfix, refactor...)
-  skills/        — переиспользуемые micro-workflow
-  pipelines/     — YAML-пайплайны для Oz/CI
-  routing/       — policy маршрутизации задач
-  runs/          — артефакты каждого прогона
-  evals/         — золотые тесты для blueprint'ов
-.codex/          — config.toml (cloud + local профили)
-.cursor/rules/   — editor-specific правила
-.claude/         — settings, skills Claude Code
-mcp/             — конфигурация MCP серверов
+  base/          — canon: rules, architecture, done criteria
+  blueprints/    — pipeline templates (feature, bugfix, refactor...)
+  skills/        — reusable micro-workflows
+  pipelines/     — YAML pipelines for Oz/CI
+  routing/       — task routing policy
+  runs/          — artifacts from each run
+  evals/         — golden tests for blueprints
+.codex/          — config.toml (cloud + local profiles)
+.cursor/rules/   — editor-specific rules
+.claude/         — Claude Code settings, skills
+mcp/             — MCP server configuration
 scripts/         — ai-check, blueprint-run, plan-init, package-pr
-llm/             — локальный LLM стек (Harbor + TabbyAPI + llama.cpp)
+llm/             — local LLM stack (Harbor + TabbyAPI + llama.cpp)
 ```
 
-## Быстрый старт
+## Quick start
 
-### 1. Инициализация системы
+### 1. Initialize system
 
 ```bash
 ./scripts/init.sh
 ```
 
-Скрипт: проверит зависимости, скопирует `.env.example` → `.env`, настроит MCP, проверит локальный LLM стек.
+Script: checks dependencies, copies `.env.example` → `.env`, configures MCP, checks local LLM stack.
 
-### 2. Запустить локальный LLM
+### 2. Start local LLM
 
 ```bash
-just llm-up              # TabbyAPI + кодер 7B
-# или
-./llm/setup/install.sh   # первая установка
+just llm-up              # TabbyAPI + coder 7B
+# or
+./llm/setup/install.sh   # first installation
 ```
 
-### 3. Запустить blueprint-пайплайн
+### 3. Run blueprint pipeline
 
 ```bash
-# Новая фича
+# New feature
 just bp feature TASK-123
 
-# Баг-фикс
+# Bug fix
 just bp bugfix BUG-456
 
 # Code review
 just bp review PR-789
 ```
 
-### 4. Проверить статус
+### 4. Check status
 
 ```bash
-just status              # все агенты и сервисы
-./scripts/ai-check.sh    # валидация проекта
+just status              # all agents and services
+./scripts/ai-check.sh    # project validation
 ```
 
-## Жизненный цикл pipeline
+## Pipeline lifecycle
 
 ```
 Intake (brief.md)
   → Architectural pass — Claude Code (plan.md)
     → Task slicing — Claude / Cursor (tasks.yaml)
-      → Isolated execution — Codex в worktree (код)
+      → Isolated execution — Codex in worktree (code)
         → Verification — scripts/ai-check.sh (verification.md)
           → Narrative review — Claude Code (findings.md)
             → PR packaging — Codex/Cursor (pr-body.md)
-              → Retro → обновление BASE.md / blueprints
+              → Retro → update BASE.md / blueprints
 ```
 
-## Локальный LLM
+## Local LLM
 
-Подробнее: [llm/README.md](llm/README.md)
+More info: [llm/README.md](llm/README.md)
 
-RTX 4070 (12 GB VRAM) — рекомендуемый стек: Harbor + TabbyAPI + EXL2.
+RTX 4070 (12 GB VRAM) — recommended stack: Harbor + TabbyAPI + EXL2.
 
 ```bash
 cd llm
@@ -139,35 +139,35 @@ cd llm
 
 ## BASE
 
-# BASE — Канон проекта
+# BASE — Project Canon
 
-Этот файл — единственный источник истины о правилах проекта.
-`AGENTS.md` и `CLAUDE.md` ссылаются на него. Не дублируй правила из BASE.md в других файлах.
+This file is the single source of truth for project rules.
+`AGENTS.md` and `CLAUDE.md` reference it. Do not duplicate rules from BASE.md in other files.
 
 ---
 
 ## Project mission
 
-> Заполни: что производит этот проект, кому и зачем.
+> Fill in: what this project produces, for whom, and why.
 
 ## Architecture constraints
 
-> Заполни: какие архитектурные решения уже приняты и не пересматриваются.
+> Fill in: which architectural decisions are already made and are not up for revision.
 
-- [ ] TODO: список сервисов / модулей
-- [ ] TODO: граница зон ответственности
-- [ ] TODO: что нельзя трогать без явного решения команды
+- [ ] TODO: list of services / modules
+- [ ] TODO: boundary of responsibilities
+- [ ] TODO: what must not be changed without an explicit team decision
 
 ## Tech stack
 
-| Компонент | Технология | Версия |
-|-----------|-----------|--------|
-| TODO      | TODO      | TODO   |
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| TODO      | TODO      | TODO    |
 
 ## Build & test commands
 
 ```bash
-# Заменить на реальные команды проекта
+# Replace with real project commands
 # npm run lint
 # npm run typecheck
 # npm test
@@ -176,45 +176,45 @@ cd llm
 
 ## Coding standards
 
-- Язык нового кода: TODO (выбери: Python / TypeScript / Go / etc.)
-- Именование: TODO (snake_case / camelCase / etc.)
-- Минимальное покрытие тестами: TODO %
-- Обязательный linter: TODO
-- Форматтер: TODO
+- Language for new code: TODO (choose: Python / TypeScript / Go / etc.)
+- Naming: TODO (snake_case / camelCase / etc.)
+- Minimum test coverage: TODO %
+- Required linter: TODO
+- Formatter: TODO
 
 ## What agents may NOT do without explicit approval
 
-- Изменять схему БД
-- Менять публичный API (breaking changes)
-- Удалять данные в production
-- Изменять CI/CD пайплайны
-- Коммитить secrets, ключи, credentials
-- Amend опубликованных коммитов
+- Change database schema
+- Modify public API (breaking changes)
+- Delete production data
+- Change CI/CD pipelines
+- Commit secrets, keys, credentials
+- Amend published commits
 
 ## Definition of done
 
-Задача считается выполненной, когда:
-- [ ] `scripts/ai-check.sh` проходит без ошибок
-- [ ] Юнит-тесты написаны / обновлены
-- [ ] `verification.md` заполнен
-- [ ] `pr-body.md` готов
-- [ ] Нет закомментированного кода
-- [ ] Нет hardcoded secrets
+Task is complete when:
+- [ ] `scripts/ai-check.sh` passes without errors
+- [ ] Unit tests written / updated
+- [ ] `verification.md` filled
+- [ ] `pr-body.md` ready
+- [ ] No commented-out code
+- [ ] No hardcoded secrets
 
 ## Review rules
 
-1. Каждый PR должен иметь `pr-body.md` с мотивацией изменений.
-2. Breaking changes требуют явного обозначения в PR.
-3. Изменения в `.ai/base/BASE.md` требуют ревью человека, не агента.
+1. Every PR must have `pr-body.md` with motivation for changes.
+2. Breaking changes require explicit marking in PR.
+3. Changes to `.ai/base/BASE.md` require human review, not agent.
 
 ## Escalation policy
 
-| Ситуация | Действие |
-|---------|---------|
-| Security issue найден | Стоп, создать findings.md, эскалировать |
-| Неясная причина бага | Стоп, написать диагноз, спросить человека |
-| Требуется изменить схему БД | Стоп, написать migration plan, спросить |
-| Diff > 500 строк неожиданно | Проверить scope, возможно нужно разбить |
+| Situation | Action |
+|---------|--------|
+| Security issue found | Stop, create findings.md, escalate |
+| Unclear bug cause | Stop, write diagnosis, ask human |
+| Need to change DB schema | Stop, write migration plan, ask |
+| Diff > 500 lines unexpectedly | Check scope, may need to split |
 
 
 ## AGENTS

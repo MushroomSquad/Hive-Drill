@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Прокидывает локальный LLM endpoint наружу через HTTPS-туннель
-# Нужно для Cursor — он требует публичный HTTPS URL
-# Поддерживает: cloudflared (бесплатно, рекомендуется) или ngrok
+# Forward local LLM endpoint externally via HTTPS tunnel
+# Required for Cursor — it requires a public HTTPS URL
+# Supports: cloudflared (free, recommended) or ngrok
 set -euo pipefail
 
 BACKEND="${1:-tabbyapi}"
@@ -13,15 +13,15 @@ case "$BACKEND" in
   *)         LOCAL_PORT="${1:-33931}" ;;
 esac
 
-echo "=== HTTPS Туннель ==="
-echo "Локальный порт: $LOCAL_PORT"
-echo "Туннель: $TUNNEL"
+echo "=== HTTPS Tunnel ==="
+echo "Local port: $LOCAL_PORT"
+echo "Tunnel: $TUNNEL"
 echo ""
 
 case "$TUNNEL" in
   cloudflared)
     if ! command -v cloudflared &>/dev/null; then
-      echo "Устанавливаю cloudflared..."
+      echo "Installing cloudflared..."
       if command -v apt-get &>/dev/null; then
         curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | \
           sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
@@ -31,31 +31,31 @@ case "$TUNNEL" in
       elif command -v brew &>/dev/null; then
         brew install cloudflare/cloudflare/cloudflared
       else
-        echo "Скачай cloudflared вручную: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
+        echo "Download cloudflared manually: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
         exit 1
       fi
     fi
-    echo "Запускаю туннель (Ctrl+C для остановки)..."
-    echo "URL появится ниже. Скопируй его и вставь в Cursor Settings → Models → Override OpenAI Base URL"
-    echo "(добавь /v1 в конец)"
+    echo "Starting tunnel (Ctrl+C to stop)..."
+    echo "URL will appear below. Copy it and paste into Cursor Settings → Models → Override OpenAI Base URL"
+    echo "(add /v1 at the end)"
     echo ""
     cloudflared tunnel --url "http://localhost:$LOCAL_PORT"
     ;;
 
   ngrok)
     if ! command -v ngrok &>/dev/null; then
-      echo "ngrok не найден. Установи: https://ngrok.com/download"
+      echo "ngrok not found. Install: https://ngrok.com/download"
       exit 1
     fi
-    echo "Запускаю ngrok туннель (Ctrl+C для остановки)..."
-    echo "URL появится в ngrok UI: http://localhost:4040"
+    echo "Starting ngrok tunnel (Ctrl+C to stop)..."
+    echo "URL will appear in ngrok UI: http://localhost:4040"
     echo ""
     ngrok http "$LOCAL_PORT"
     ;;
 
   *)
-    echo "Неизвестный туннель: $TUNNEL"
-    echo "Используй: cloudflared (рекомендуется) или ngrok"
+    echo "Unknown tunnel: $TUNNEL"
+    echo "Use: cloudflared (recommended) or ngrok"
     exit 1
     ;;
 esac

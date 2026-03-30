@@ -1,22 +1,22 @@
 # Skill: PR Review (Quick)
 **Owner:** Claude Code (P1)
-**When to use:** Быстрый review PR без полного pipeline. Для небольших изменений.
+**When to use:** Quick PR review without full pipeline. For small changes.
 
 ---
 
 ## Task
-Структурированный review diff'а с выводом findings.
+Structured diff review with findings output.
 
 ## Input required
-- PR diff (или `git diff <base>..<head>`)
+- PR diff (or `git diff <base>..<head>`)
 - PR description / title
-- Опционально: brief.md / plan.md
+- Optional: brief.md / plan.md
 
 ## Steps
 
-1. Прочитать PR description
-2. `git diff --stat` — понять масштаб
-3. Читать diff по файлам, применять checklist:
+1. Read PR description
+2. `git diff --stat` — understand scope
+3. Read diff by files, apply checklist:
 
 ```
 For each changed file:
@@ -28,11 +28,11 @@ For each changed file:
 ☐ Naming and conventions (per BASE.md)
 ```
 
-4. Записать findings по формату review-v1.md Stage 3
+4. Record findings per review-v1.md Stage 3 format
 
 ## Output: `findings.md`
 
-Минимальный вариант для quick review:
+Minimal version for quick review:
 ```markdown
 # Quick Review: <PR title>
 

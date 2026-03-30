@@ -1,37 +1,37 @@
-# MCP Servers — Общая шина инструментов
+# MCP Servers — Common tool bus
 
-MCP (Model Context Protocol) — общий клей для всех агентов.
-Один набор серверов подключается в **Cursor**, **Codex**, **Claude Code** и **Warp**.
+MCP (Model Context Protocol) — common glue for all agents.
+One set of servers connects to **Cursor**, **Codex**, **Claude Code**, and **Warp**.
 
-## Установка
+## Installation
 
 ```bash
-./scripts/init.sh --mcp    # установить MCP серверы
+./scripts/init.sh --mcp    # install MCP servers
 ```
 
-или вручную:
+or manually:
 ```bash
 npm install -g @modelcontextprotocol/server-github
 npm install -g @modelcontextprotocol/server-filesystem
 npm install -g @modelcontextprotocol/server-memory
 ```
 
-## Подключение в каждый инструмент
+## Connecting to each tool
 
 ### Cursor
-`~/.cursor/mcp.json` или `Settings → MCP`:
+`~/.cursor/mcp.json` or `Settings → MCP`:
 ```json
-{ "mcpServers": <содержимое mcp/config.json mcpServers> }
+{ "mcpServers": <content from mcp/config.json mcpServers> }
 ```
 
 ### Claude Code
-`~/.claude/claude_desktop_config.json` или `settings.json`:
+`~/.claude/claude_desktop_config.json` or `settings.json`:
 ```json
-{ "mcpServers": <содержимое mcp/config.json mcpServers> }
+{ "mcpServers": <content from mcp/config.json mcpServers> }
 ```
 
 ### Codex
-Добавить в `.codex/config.toml` секцию `[mcp]`:
+Add `[mcp]` section to `.codex/config.toml`:
 ```toml
 [mcp.servers.github]
 command = "npx"
@@ -39,22 +39,22 @@ args = ["-y", "@modelcontextprotocol/server-github"]
 ```
 
 ### Warp
-Warp → Settings → MCP → Add server → вставить конфиг.
+Warp → Settings → MCP → Add server → paste config.
 
-## Серверы
+## Servers
 
-| Сервер | Назначение | Обязательный |
-|--------|-----------|:----------:|
+| Server | Purpose | Required |
+|--------|---------|:--------:|
 | `github` | Issues, PRs, code search | ✅ |
-| `filesystem` | Файловые операции с валидацией | ✅ |
-| `memory` | Cross-session контекст агентов | ✅ |
-| `postgres` | Схема БД, readonly queries | опц. |
-| `playwright` | Browser automation, E2E | опц. |
-| `linear` | Трекер задач | опц. |
+| `filesystem` | File operations with validation | ✅ |
+| `memory` | Cross-session agent context | ✅ |
+| `postgres` | DB schema, readonly queries | opt. |
+| `playwright` | Browser automation, E2E | opt. |
+| `linear` | Task tracker | opt. |
 
-## Переменные окружения
+## Environment variables
 
-Создай `.env` из `.env.example`:
+Create `.env` from `.env.example`:
 ```
 GITHUB_TOKEN=ghp_...
 DATABASE_URL=postgresql://...

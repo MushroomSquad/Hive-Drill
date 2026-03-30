@@ -117,7 +117,7 @@ fi
 # ─── Next step prompt ─────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}Next steps:${RESET}"
-echo -e "  1. Заполни brief в файле: ${VAULT#${PROJECT_ROOT}/}/00-inbox/${TASK_ID}.md"
-echo -e "  2. Смени \`status: draft\` → \`status: ready\`"
-echo -e "  3. Запусти pipeline: ${CYAN}${BOLD}just go ${TASK_ID}${RESET}"
+echo -e "  1. Fill in brief in file: ${VAULT#${PROJECT_ROOT}/}/00-inbox/${TASK_ID}.md"
+echo -e "  2. Change \`status: draft\` → \`status: ready\`"
+echo -e "  3. Run pipeline: ${CYAN}${BOLD}just go ${TASK_ID}${RESET}"
 echo ""

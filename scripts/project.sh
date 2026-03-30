@@ -110,7 +110,7 @@ data = {
 with open(canvas_path, "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=2)
 
-print(f"[canvas] Создан canvas для проекта: {project_name}")
+print(f"[canvas] Canvas created for project: {project_name}")
 PYEOF
     fi
 }

@@ -401,7 +401,7 @@ $(cat "${brief_file}")
 PROJECT SNAPSHOT:
 ${project_snapshot}"
 
-    # claude -p = non-interactive print mode (не ждёт терминал)
+    # claude -p = non-interactive print mode (doesn't wait for terminal)
     local tmp_prompt
     tmp_prompt=$(mktemp)
     echo "${full_prompt}" > "${tmp_prompt}"
@@ -422,10 +422,10 @@ ${project_snapshot}"
 }
 
 # ─── Plan validators ─────────────────────────────────────────────────────────
-# Запускает два быстрых claude-агента параллельно перед gate:
-#   - reality-check: реалистичен ли план?
-#   - completeness:  нет ли пропущенных рисков или шагов?
-# Вывод — информационный (не блокирует pipeline).
+# Runs two fast claude agents in parallel before gate:
+#   - reality-check: is the plan realistic?
+#   - completeness:  are there missing risks or steps?
+# Output is informational (does not block pipeline).
 validate_plan() {
     local plan_file="${RUN_DIR}/plan.md"
 
@@ -1001,7 +1001,7 @@ run_stage() {
 
 run_stage 0 stage_check_brief
 [[ $FROM_STAGE -le 0 ]] && write_checkpoint 0 "brief"
-# Brief найден → карточка уже в planning (двинута в stage_check_brief)
+# Brief found → card already in planning (moved to stage_check_brief)
 
 run_stage 1 stage_plan
 [[ $FROM_STAGE -le 1 ]] && validate_plan

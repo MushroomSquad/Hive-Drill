@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Профиль: llama.cpp router mode — несколько GGUF-моделей одновременно
-# Назначение: резервный стек, переключение по полю "model" в запросе
+# Profile: llama.cpp router mode — multiple GGUF models at once
+# Purpose: fallback stack, switch via "model" field in request
 # Endpoint: http://localhost:33831/v1
 set -euo pipefail
 
@@ -8,31 +8,31 @@ echo "=== llama.cpp: Router Mode ==="
 echo "Endpoint: http://localhost:33831/v1"
 echo ""
 
-# Включить router mode — убрать фиксированный specifier модели
+# Enable router mode — remove fixed model specifier
 harbor config set llamacpp.model.specifier ""
 
-# Аргументы сервера:
-#   --models-dir  — папка с GGUF файлами
-#   --models-max  — максимум одновременно загруженных моделей
-#   --no-models-autoload — не грузить всё при старте
-#   -c 8192       — размер контекста
+# Server arguments:
+#   --models-dir  — folder with GGUF files
+#   --models-max  — max models loaded simultaneously
+#   --no-models-autoload — don't load everything at startup
+#   -c 8192       — context size
 #   -fa           — Flash Attention
-#   -ngl all      — все слои на GPU
+#   -ngl all      — all layers on GPU
 harbor llamacpp args \
   "--models-dir /app/data/models --models-max 2 --no-models-autoload -c 8192 -fa on -ngl all"
 
 harbor up llamacpp
 
 echo ""
-echo "Загрузить кодер:"
+echo "Load coder:"
 echo "  curl -X POST http://localhost:33831/models/load \\"
 echo "    -H 'Content-Type: application/json' \\"
 echo "    -d '{\"model\": \"Qwen2.5-Coder-7B-Instruct-Q5_K_M\"}'"
 echo ""
-echo "Загрузить писателя:"
+echo "Load writer:"
 echo "  curl -X POST http://localhost:33831/models/load \\"
 echo "    -H 'Content-Type: application/json' \\"
 echo "    -d '{\"model\": \"Qwen2.5-14B-Instruct-Q4_K_M\"}'"
 echo ""
-echo "Список доступных моделей:"
+echo "List available models:"
 echo "  curl http://localhost:33831/v1/models"
