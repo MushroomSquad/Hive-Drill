@@ -339,6 +339,7 @@ All implementation steps must modify files inside ${TARGET_ROOT}."
 
     local prompt
     prompt="$(cat <<'PROMPT_EOF'
+Do NOT call any filesystem tools.
 You are a senior software architect. Read the task brief and project snapshot below, then produce a detailed implementation plan.
 
 WORKSPACE_DIRECTIVE_PLACEHOLDER
@@ -410,14 +411,17 @@ ${project_snapshot}"
     fi
     rm -f "${tmp_prompt}"
 
-    if [[ -f "${plan_file}" && -s "${plan_file}" ]]; then
+    if [[ -f "${plan_file}" ]] \
+        && head -n 1 "${plan_file}" | grep -q '^---$' \
+        && grep -q '^## Implementation steps' "${plan_file}"; then
         # Fix frontmatter values
         set_frontmatter_value "${plan_file}" "task_id" "${TASK_ID}"
         log_success "Plan generated: ${plan_file}"
     else
-        log_warn "Plan file is empty. Using template."
+        log_warn "Plan output is invalid. Restoring template."
         cat "${VAULT}/templates/plan.md" > "${plan_file}"
         set_frontmatter_value "${plan_file}" "task_id" "${TASK_ID}"
+        return 1
     fi
 }
 
@@ -919,7 +923,7 @@ stage_pr() {
 
     if [[ -f "${PROJECT_ROOT}/scripts/package-pr.sh" ]]; then
         log_info "Running: scripts/package-pr.sh ${TASK_ID}"
-        "${PROJECT_ROOT}/scripts/package-pr.sh" "${TASK_ID}" || log_warn "package-pr.sh failed."
+        "${PROJECT_ROOT}/scripts/package-pr.sh" "${TASK_ID}" "${RUN_DIR}" || log_warn "package-pr.sh failed."
         return 0
     fi
 

@@ -95,6 +95,13 @@ echo "WORKSPACE=workspace/testapp" > "${TEST_REPO}/.env"
 # Mock external tools in TEST_MOCK_BIN and prepend to PATH
 prepend_mock_bin
 
+mock_cmd_script "just" '
+if [[ "${1:-}" == "--list" ]]; then
+  exit 0
+fi
+exit 0
+'
+
 # Mock claude: output a valid plan.md regardless of args
 mock_cmd_script "claude" '
 echo "---"
@@ -113,9 +120,12 @@ exit 0
 
 # Mock codex: no-op
 mock_cmd "codex" 0 "codex mock"
+mock_cmd "gh" 0 "gh mock"
+mock_cmd "npm" 0 "npm mock"
+mock_cmd "npx" 0 "npx mock"
 
-# Feed 'y' answers to both gates (plan + review)
-output=$(printf 'y\ny\n' | (cd "${TEST_REPO}" && bash scripts/go.sh "${TASK_ID}" 2>&1))
+# Feed 'y' answers to both gates (plan + review), then 'n' to skip gh PR creation
+output=$(printf 'y\ny\nn\n' | (cd "${TEST_REPO}" && bash scripts/go.sh "${TASK_ID}" 2>&1))
 code=$?
 
 it "pipeline runs to completion"
@@ -142,6 +152,54 @@ assert_file_exists "$(run_dir ${TASK_ID})/findings.md"
 
 it "prints Pipeline complete message"
 assert_contains "Pipeline complete" "$output"
+
+describe "go.sh — invalid plan output falls back to template"
+
+TASK_ID_INVALID="PIPE-INVALID"
+cat > "${VAULT}/00-inbox/${TASK_ID_INVALID}.md" <<'EOF'
+---
+task_id: PIPE-INVALID
+status: ready
+---
+# Brief: PIPE-INVALID
+## Goal
+Reject malformed plan output.
+EOF
+
+mock_cmd_script "claude" '
+echo "This is plain prose."
+echo "It has no frontmatter."
+exit 0
+'
+
+output_invalid=$(cd "${TEST_REPO}" && bash scripts/go.sh "${TASK_ID_INVALID}" --from-stage 1 2>&1); code_invalid=$?
+
+it "returns 1 when plan output is malformed"
+assert_exit_fail $code_invalid
+
+it "restores the plan template frontmatter header on line 1"
+assert_equals "---" "$(head -n 1 "$(run_dir ${TASK_ID_INVALID})/plan.md")"
+
+it "restores the Implementation steps heading from the template"
+assert_file_contains "$(run_dir ${TASK_ID_INVALID})/plan.md" "## Implementation steps"
+
+it "does not keep the tool-request prose in plan.md"
+assert_not_contains "This is plain prose." "$(cat "$(run_dir ${TASK_ID_INVALID})/plan.md")"
+
+mock_cmd_script "claude" '
+echo "---"
+echo "task_id: PIPE-001"
+echo "status: draft"
+echo "agent: claude"
+echo "created: 2026-03-27"
+echo "---"
+echo "# Plan: Test"
+echo "## Chosen approach"
+echo "Option A — do the thing"
+echo "## Implementation steps"
+echo "1. Do the thing"
+exit 0
+'
 
 describe "go.sh — --from-stage flag"
 
@@ -196,7 +254,7 @@ status: ready
 Test workspace routing.
 EOF
 
-output3=$(printf 'y\ny\n' | (cd "${TEST_REPO}" && bash scripts/go.sh "${TASK_ID3}" 2>&1))
+output3=$(printf 'y\ny\nn\n' | (cd "${TEST_REPO}" && bash scripts/go.sh "${TASK_ID3}" 2>&1))
 code3=$?
 
 it "exits 0 with WORKSPACE set"

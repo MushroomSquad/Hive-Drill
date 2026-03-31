@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Packages PR from run artifacts
-# Usage: ./scripts/package-pr.sh <TASK-ID>
+# Usage: ./scripts/package-pr.sh <TASK-ID> [RUN-DIR]
 set -euo pipefail
 
-TASK_ID="${1:?Usage: $0 <TASK-ID>}"
-RUN_DIR=".ai/runs/$TASK_ID"
+TASK_ID="${1:?Usage: $0 <TASK-ID> [RUN-DIR]}"
+RUN_DIR="${2:-.ai/runs/$TASK_ID}"
 
 die() { echo "[ERR] $*"; exit 1; }
 ok()  { echo "[OK]  $*"; }

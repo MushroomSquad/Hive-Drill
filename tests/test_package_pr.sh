@@ -85,6 +85,82 @@ assert_file_contains "${RUN_DIR}/pr-body.md" "## Summary"
 it "pr-body.md has Test plan section"
 assert_file_contains "${RUN_DIR}/pr-body.md" "## Test plan"
 
+describe "package-pr.sh — namespaced run dir argument"
+
+TASK_ID_NS="T-001"
+RUN_DIR_NS="${TEST_REPO}/.ai/runs/testproject/${TASK_ID_NS}"
+mkdir -p "${RUN_DIR_NS}"
+
+cat > "${RUN_DIR_NS}/brief.md" <<'EOF'
+---
+task_id: T-001
+status: done
+---
+# Brief: T-001
+
+## Goal
+Use namespaced run dir.
+EOF
+
+cat > "${RUN_DIR_NS}/verification.md" <<'EOF'
+# Verification: T-001
+EOF
+
+cat > "${RUN_DIR_NS}/findings.md" <<'EOF'
+---
+verdict: APPROVED
+---
+# Findings
+> **APPROVED**
+EOF
+
+output_ns=$(echo "n" | (cd "${TEST_REPO}" && bash "${PACKAGE_PR_SH}" "${TASK_ID_NS}" ".ai/runs/testproject/${TASK_ID_NS}" 2>&1))
+code_ns=$?
+
+it "exits 0 when given a namespaced run dir"
+assert_exit_ok $code_ns
+
+it "creates pr-body.md in the namespaced run dir"
+assert_file_exists "${RUN_DIR_NS}/pr-body.md"
+
+describe "package-pr.sh — legacy flat run dir fallback"
+
+TASK_ID_LEGACY="T-002"
+RUN_DIR_LEGACY="${TEST_REPO}/.ai/runs/${TASK_ID_LEGACY}"
+mkdir -p "${RUN_DIR_LEGACY}"
+
+cat > "${RUN_DIR_LEGACY}/brief.md" <<'EOF'
+---
+task_id: T-002
+status: done
+---
+# Brief: T-002
+
+## Goal
+Use legacy flat run dir.
+EOF
+
+cat > "${RUN_DIR_LEGACY}/verification.md" <<'EOF'
+# Verification: T-002
+EOF
+
+cat > "${RUN_DIR_LEGACY}/findings.md" <<'EOF'
+---
+verdict: APPROVED
+---
+# Findings
+> **APPROVED**
+EOF
+
+output_legacy=$(echo "n" | (cd "${TEST_REPO}" && bash "${PACKAGE_PR_SH}" "${TASK_ID_LEGACY}" 2>&1))
+code_legacy=$?
+
+it "exits 0 when only the legacy flat path exists"
+assert_exit_ok $code_legacy
+
+it "creates pr-body.md in the legacy flat run dir"
+assert_file_exists "${RUN_DIR_LEGACY}/pr-body.md"
+
 describe "package-pr.sh — blocked by non-approved findings"
 
 TASK_ID2="PR-002"

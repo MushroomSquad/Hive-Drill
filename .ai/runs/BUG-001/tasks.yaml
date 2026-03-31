@@ -1,0 +1,33 @@
+task_id: BUG-001
+status: done
+tasks:
+  - id: TASK-1
+    title: Prepend no-filesystem directive in stage_plan prompt
+    done: true
+  - id: TASK-2
+    title: Replace size-only plan validation with structured checks
+    done: true
+  - id: TASK-3
+    title: Restore template and stop pipeline on invalid plan output
+    done: true
+  - id: TASK-4
+    title: Add optional run-dir arg to package-pr.sh
+    done: true
+  - id: TASK-5
+    title: Pass namespaced RUN_DIR from stage_pr
+    done: true
+  - id: TASK-6
+    title: Update just pr recipe if needed
+    done: true
+  - id: TEST-1
+    title: Add namespaced package-pr test
+    done: true
+  - id: TEST-2
+    title: Add legacy package-pr test
+    done: true
+  - id: TEST-3
+    title: Add plan validation fallback test
+    done: true
+  - id: TEST-4
+    title: Run just go smoke test on fixture
+    done: true
