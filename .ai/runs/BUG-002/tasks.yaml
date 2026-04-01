@@ -1,0 +1,51 @@
+run_id: BUG-002
+blueprint: bugfix-v1
+created: 2026-03-31
+status: done
+
+tasks:
+  - id: TASK-1
+    title: Audit worktree-root writes for go.sh-adjacent scripts and record output paths
+    done: true
+  - id: TASK-2
+    title: Write transient PR description files under _ai_tmp/ instead of the worktree root
+    done: true
+  - id: TASK-3
+    title: Update PR_DESCRIPTION.md read sites to use _ai_tmp/PR_DESCRIPTION.md
+    done: true
+  - id: TASK-4
+    title: Confirm other audited scripts do not leave transient root files, and document intended root writes
+    done: true
+  - id: TASK-5
+    title: Reset _ai_tmp at pipeline start in scripts/go.sh
+    done: true
+  - id: TASK-6
+    title: Add guarded EXIT trap for _ai_tmp cleanup in scripts/go.sh
+    done: true
+  - id: TASK-7
+    title: Remove stale _ai_tmp in scripts/cleanup.sh
+    done: true
+  - id: TASK-8
+    title: Add _ai_tmp/ ignore guard in init-time project setup
+    done: true
+  - id: TASK-9
+    title: Update blueprints to document _ai_tmp/ for transient workspace files
+    done: true
+  - id: TASK-10
+    title: Fail ai-check when _ai_tmp/ remains in the worktree root
+    done: true
+  - id: TEST-1
+    title: Verify package-pr writes _ai_tmp/PR_DESCRIPTION.md and not root PR_DESCRIPTION.md
+    done: true
+  - id: TEST-2
+    title: Verify full pipeline removes _ai_tmp/ on clean exit
+    done: true
+  - id: TEST-3
+    title: Verify EXIT trap removes _ai_tmp/ after a late pipeline failure
+    done: true
+  - id: TEST-4
+    title: Verify cleanup.sh removes stale _ai_tmp/
+    done: true
+  - id: TEST-5
+    title: Manual verification with just go BUG-005
+    done: false

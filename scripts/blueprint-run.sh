@@ -13,9 +13,11 @@ BLUEPRINT="${1:?Usage: $0 <blueprint> <TASK-ID> [stage]}"
 TASK_ID="${2:?Usage: $0 <blueprint> <TASK-ID> [stage]}"
 STAGE="${3:-all}"
 
-RUN_DIR=".ai/runs/$TASK_ID"
-PIPELINE_FILE=".ai/pipelines/${BLUEPRINT}.yaml"
-BLUEPRINT_FILE=".ai/blueprints/${BLUEPRINT}-v1.md"
+PROJECT_ROOT="$(pwd)"
+AI_RUNS_DIR="${PROJECT_ROOT}/.ai/runs"
+RUN_DIR="${AI_RUNS_DIR}/${TASK_ID}"
+PIPELINE_FILE="${PROJECT_ROOT}/.ai/pipelines/${BLUEPRINT}.yaml"
+BLUEPRINT_FILE="${PROJECT_ROOT}/.ai/blueprints/${BLUEPRINT}-v1.md"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; CYAN='\033[0;36m'; YELLOW='\033[1;33m'; NC='\033[0m'
 ok()   { echo -e "${GREEN}[DONE]${NC} $*"; }
@@ -30,7 +32,7 @@ die()  { echo -e "${RED}[FAIL]${NC} $*"; exit 1; }
 # Initialize run if doesn't exist
 if [ ! -d "$RUN_DIR" ]; then
   info "Initializing run: $TASK_ID"
-  ./scripts/plan-init.sh "$TASK_ID" "$BLUEPRINT"
+  "${PROJECT_ROOT}/scripts/plan-init.sh" "$TASK_ID" "$BLUEPRINT"
   echo ""
   echo "Fill $RUN_DIR/brief.md and re-run command."
   exit 0
@@ -102,7 +104,7 @@ case "$BLUEPRINT" in
     fi
     if [[ "$STAGE" == "all" || "$STAGE" == "exec" ]]; then
       [ -f "$RUN_DIR/tasks.yaml" ] || die "No tasks.yaml — run stage slice first"
-      ./scripts/worktree.sh create "$TASK_ID" || true
+      "${PROJECT_ROOT}/scripts/worktree.sh" create "$TASK_ID" || true
       info "Worktree ready. Run Codex manually in wt/$TASK_ID-codex:"
       echo "  cd wt/$TASK_ID-codex"
       echo "  codex --profile cloud-medium 'Execute tasks from ../.ai/runs/$TASK_ID/tasks.yaml'"

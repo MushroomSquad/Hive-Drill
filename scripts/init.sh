@@ -61,6 +61,30 @@ else
   ok ".env exists"
 fi
 
+# ── .gitignore fallback guard ──────────────────────────────────────
+info "Checking .gitignore cleanup guards..."
+if [ -f .gitignore ]; then
+  if ! grep -qxF "_ai_tmp/" .gitignore; then
+    printf '\n_ai_tmp/\n' >> .gitignore
+    ok "Added _ai_tmp/ to .gitignore"
+  fi
+  if ! grep -qxF "PR_DESCRIPTION.md" .gitignore; then
+    printf 'PR_DESCRIPTION.md\n' >> .gitignore
+    ok "Added PR_DESCRIPTION.md to .gitignore"
+  fi
+  if ! grep -qxF "scaffold.py" .gitignore; then
+    printf 'scaffold.py\n' >> .gitignore
+    ok "Added scaffold.py to .gitignore"
+  fi
+else
+  cat > .gitignore <<'EOF'
+_ai_tmp/
+PR_DESCRIPTION.md
+scaffold.py
+EOF
+  ok ".gitignore created with cleanup guards"
+fi
+
 # ── .ai/runs directory ───────────────────────────────────────────────
 info "Setting up .ai/runs/..."
 mkdir -p .ai/runs

@@ -3,13 +3,24 @@
 # Usage: ./scripts/package-pr.sh <TASK-ID> [RUN-DIR]
 set -euo pipefail
 
+PROJECT_ROOT="$(pwd)"
+AI_RUNS_DIR="${PROJECT_ROOT}/.ai/runs"
 TASK_ID="${1:?Usage: $0 <TASK-ID> [RUN-DIR]}"
-RUN_DIR="${2:-.ai/runs/$TASK_ID}"
+RUN_DIR_INPUT="${2:-${AI_RUNS_DIR}/${TASK_ID}}"
+AI_TMP_DIR="${PROJECT_ROOT}/_ai_tmp"
+PR_DESCRIPTION_FILE="${AI_TMP_DIR}/PR_DESCRIPTION.md"
 
 die() { echo "[ERR] $*"; exit 1; }
 ok()  { echo "[OK]  $*"; }
 
+if [[ "${RUN_DIR_INPUT}" = /* ]]; then
+  RUN_DIR="${RUN_DIR_INPUT}"
+else
+  RUN_DIR="${PROJECT_ROOT}/${RUN_DIR_INPUT}"
+fi
+
 [ -d "$RUN_DIR" ] || die "Run not found: $RUN_DIR"
+mkdir -p "${AI_TMP_DIR}"
 
 # Check for artifacts
 MISSING=()
@@ -39,11 +50,12 @@ if [ -f "$RUN_DIR/findings.md" ]; then
 fi
 
 # Generate pr-body.md if not exists
-if [ ! -f "$RUN_DIR/pr-body.md" ]; then
+PR_BODY_FILE="${RUN_DIR}/pr-body.md"
+if [ ! -f "${PR_BODY_FILE}" ]; then
   BRIEF_GOAL=$(grep -A3 "^## Goal" "$RUN_DIR/brief.md" 2>/dev/null | tail -3 | head -1 || echo "")
   DATE=$(date +%Y-%m-%d)
 
-  cat > "$RUN_DIR/pr-body.md" << PR
+  cat > "${PR_BODY_FILE}" << PR
 # PR: $TASK_ID
 
 ## Summary
@@ -65,10 +77,13 @@ $([ -n "$BRIEF_GOAL" ] && echo "$BRIEF_GOAL" || echo "- TODO: fill from brief.md
 ---
 _Generated: $DATE
 PR
-  ok "Created: $RUN_DIR/pr-body.md"
+  ok "Created: ${PR_BODY_FILE}"
 else
   ok "pr-body.md already exists"
 fi
+
+cp "${PR_BODY_FILE}" "${PR_DESCRIPTION_FILE}"
+ok "Created: ${PR_DESCRIPTION_FILE}"
 
 # Create PR via gh if available
 if command -v gh &>/dev/null; then
@@ -79,7 +94,7 @@ if command -v gh &>/dev/null; then
     TITLE=$(head -1 "$RUN_DIR/brief.md" | sed 's/^# Brief: //')
     gh pr create \
       --title "$TITLE" \
-      --body "$(cat "$RUN_DIR/pr-body.md")" \
+      --body-file "${PR_DESCRIPTION_FILE}" \
       --draft
     ok "PR created (draft)"
   fi

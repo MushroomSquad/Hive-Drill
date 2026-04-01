@@ -23,6 +23,7 @@ setup_workspace
 
 TASK_ID="PR-001"
 RUN_DIR="${TEST_REPO}/.ai/runs/${TASK_ID}"
+GH_ARGS_FILE="${TEST_TMPDIR}/gh-args.txt"
 mkdir -p "${RUN_DIR}"
 
 # Write required artifacts
@@ -63,11 +64,15 @@ verdict: APPROVED
 EOF
 
 # Mock 'gh' so it does not try to create a real PR
-mock_cmd "gh" 0 "PR created"
+mock_cmd_script "gh" "
+printf '%s\n' \"\$@\" > \"${GH_ARGS_FILE}\"
+echo PR created
+exit 0
+"
 prepend_mock_bin
 
-# Run (pipe 'n' to skip interactive gh pr create prompt)
-output=$(echo "n" | (cd "${TEST_REPO}" && bash "${PACKAGE_PR_SH}" "${TASK_ID}" 2>&1))
+# Run and confirm gh invocation so body-file handling is exercised
+output=$(echo "y" | (cd "${TEST_REPO}" && bash "${PACKAGE_PR_SH}" "${TASK_ID}" 2>&1))
 code=$?
 
 it "exits 0 with complete artifacts"
@@ -75,6 +80,12 @@ assert_exit_ok $code
 
 it "creates pr-body.md"
 assert_file_exists "${RUN_DIR}/pr-body.md"
+
+it "creates _ai_tmp/PR_DESCRIPTION.md"
+assert_file_exists "${TEST_REPO}/_ai_tmp/PR_DESCRIPTION.md"
+
+it "does not create PR_DESCRIPTION.md in workspace root"
+assert_not_contains "PR_DESCRIPTION.md" "$(find "${TEST_REPO}" -maxdepth 1 -type f -printf '%f\n')"
 
 it "pr-body.md contains task id"
 assert_file_contains "${RUN_DIR}/pr-body.md" "${TASK_ID}"
@@ -84,6 +95,9 @@ assert_file_contains "${RUN_DIR}/pr-body.md" "## Summary"
 
 it "pr-body.md has Test plan section"
 assert_file_contains "${RUN_DIR}/pr-body.md" "## Test plan"
+
+it "passes an absolute --body-file path to gh pr create"
+assert_file_contains "${GH_ARGS_FILE}" "${TEST_REPO}/_ai_tmp/PR_DESCRIPTION.md"
 
 describe "package-pr.sh — namespaced run dir argument"
 

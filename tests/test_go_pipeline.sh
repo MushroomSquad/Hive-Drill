@@ -269,5 +269,54 @@ assert_contains "npm" "$output3"
 it "still writes run artifacts to .ai/runs/ inside hive-drill"
 assert_file_exists "$(run_dir ${TASK_ID3})/plan.md"
 
+it "removes _ai_tmp from the workspace root during cleanup"
+assert_not_contains "_ai_tmp" "$(find "${WORKSPACE_DIR}" -maxdepth 1 -mindepth 1 -printf '%f\n')"
+
+describe "go.sh — trap cleanup on failure"
+
+cp "${PROJECT_ROOT}/scripts/"*.sh "${TEST_REPO}/scripts/"
+chmod +x "${TEST_REPO}/scripts/"*.sh
+
+mock_cmd_script "claude" '
+echo "---"
+echo "task_id: PIPE-004"
+echo "status: draft"
+echo "agent: claude"
+echo "created: 2026-03-27"
+echo "---"
+echo "# Plan: Test"
+echo "## Chosen approach"
+echo "Option A — do the thing"
+echo "## Implementation steps"
+echo "1. Do the thing"
+exit 0
+'
+
+cat > "${TEST_REPO}/scripts/cleanup.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+exit 1
+EOF
+chmod +x "${TEST_REPO}/scripts/cleanup.sh"
+
+TASK_ID4="PIPE-004"
+cat > "${VAULT}/00-inbox/${TASK_ID4}.md" <<'EOF'
+---
+task_id: PIPE-004
+status: ready
+---
+# Brief: PIPE-004
+## Goal
+Test trap cleanup after a late pipeline failure.
+EOF
+
+output4=$(printf 'y\ny\nn\n' | (cd "${TEST_REPO}" && bash scripts/go.sh "${TASK_ID4}" 2>&1)); code4=$?
+
+it "exits non-zero when cleanup.sh fails"
+assert_exit_fail $code4
+
+it "still removes _ai_tmp via trap after the failure"
+assert_not_contains "_ai_tmp" "$(find "${WORKSPACE_DIR}" -maxdepth 1 -mindepth 1 -printf '%f\n')"
+
 teardown_workspace
 print_summary

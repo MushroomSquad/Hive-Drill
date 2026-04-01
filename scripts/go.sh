@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # go.sh — Main pipeline automation script
-# Usage: ./scripts/go.sh <TASK-ID> [--from-stage <0-6>]
+# Usage: ./scripts/go.sh <TASK-ID> [--from-stage <0-7>]
 #
 # Stages:
 #   0  Brief  (human)
@@ -10,6 +10,7 @@
 #   4  Tests  (scripts)
 #   5  Review (claude)  → Gate
 #   6  PR     (scripts)
+#   7  Cleanup (scripts)
 
 set -euo pipefail
 
@@ -45,9 +46,13 @@ check_cmd() {
     command -v "$1" &>/dev/null
 }
 
+cleanup_ai_tmp() {
+    [[ -n "${WORKTREE_PATH:-}" ]] && rm -rf "${WORKTREE_PATH}/_ai_tmp"
+}
+
 # ─── Args ────────────────────────────────────────────────────────────────────
 if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 <TASK-ID> [--from-stage <0-6>] [--workspace <path|self>]"
+    echo "Usage: $0 <TASK-ID> [--from-stage <0-7>] [--workspace <path|self>]"
     exit 1
 fi
 
@@ -116,6 +121,7 @@ elif [[ -n "${WORKSPACE:-}" ]]; then
 else
     TARGET_ROOT="${PROJECT_ROOT}"
 fi
+WORKTREE_PATH="${TARGET_ROOT}"
 
 if [[ "${TARGET_ROOT}" != "${PROJECT_ROOT}" ]] && [[ ! -d "${TARGET_ROOT}" ]]; then
     die "WORKSPACE not found: ${TARGET_ROOT}\n  Run: just clone <url> <name>"
@@ -269,6 +275,7 @@ stage_check_brief() {
         brief_ws="$(get_frontmatter_value "${RUN_DIR}/brief.md" "workspace")"
         if [[ -n "${brief_ws}" ]]; then
             TARGET_ROOT="$(resolve_target_root "${brief_ws}")"
+            WORKTREE_PATH="${TARGET_ROOT}"
             if [[ "${TARGET_ROOT}" != "${PROJECT_ROOT}" ]] && [[ ! -d "${TARGET_ROOT}" ]]; then
                 die "Brief 'workspace: ${brief_ws}' not found: ${TARGET_ROOT}"
             fi
@@ -923,7 +930,7 @@ stage_pr() {
 
     if [[ -f "${PROJECT_ROOT}/scripts/package-pr.sh" ]]; then
         log_info "Running: scripts/package-pr.sh ${TASK_ID}"
-        "${PROJECT_ROOT}/scripts/package-pr.sh" "${TASK_ID}" "${RUN_DIR}" || log_warn "package-pr.sh failed."
+        (cd "${TARGET_ROOT}" && "${PROJECT_ROOT}/scripts/package-pr.sh" "${TASK_ID}" "${RUN_DIR}") || log_warn "package-pr.sh failed."
         return 0
     fi
 
@@ -934,6 +941,19 @@ stage_pr() {
     echo "  3. git push origin HEAD"
     echo "  4. gh pr create --title '${TASK_ID}' --body 'See .ai/runs/${TASK_ID}/'"
     echo ""
+}
+
+# ─── Stage 7: Cleanup ────────────────────────────────────────────────────────
+stage_cleanup() {
+    log_stage 7 "Workspace cleanup"
+
+    if [[ -f "${PROJECT_ROOT}/scripts/cleanup.sh" ]]; then
+        log_info "Running: scripts/cleanup.sh in ${TARGET_ROOT}"
+        (cd "${TARGET_ROOT}" && "${PROJECT_ROOT}/scripts/cleanup.sh")
+        return 0
+    fi
+
+    log_warn "No cleanup script found. Skipping workspace cleanup."
 }
 
 # ─── Copy artifacts to vault ─────────────────────────────────────────────────
@@ -1006,6 +1026,9 @@ run_stage() {
 run_stage 0 stage_check_brief
 [[ $FROM_STAGE -le 0 ]] && write_checkpoint 0 "brief"
 # Brief found → card already in planning (moved to stage_check_brief)
+
+rm -rf "${WORKTREE_PATH}/_ai_tmp"
+trap 'cleanup_ai_tmp' EXIT
 
 run_stage 1 stage_plan
 [[ $FROM_STAGE -le 1 ]] && validate_plan
@@ -1081,5 +1104,6 @@ while true; do
 done
 
 run_stage 6 stage_pr
+run_stage 7 stage_cleanup
 
 finalize

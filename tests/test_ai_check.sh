@@ -95,6 +95,20 @@ assert_contains "FAIL" "$output"
 
 teardown_workspace
 
+describe "ai-check.sh — transient workspace cleanup contract"
+
+setup_workspace
+mkdir -p "${TEST_REPO}/_ai_tmp"
+
+it "exits 1 when _ai_tmp is still present"
+output=$(cd "${TEST_REPO}" && bash "${AICHECK_SH}" --quick 2>&1); code=$?
+assert_exit_fail $code
+
+it "prints a descriptive cleanup failure"
+assert_contains "_ai_tmp" "$output"
+
+teardown_workspace
+
 describe "ai-check.sh — go project"
 
 setup_workspace

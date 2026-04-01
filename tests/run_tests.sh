@@ -20,6 +20,7 @@ ALL_TESTS=(
     test_plan_init
     test_worktree
     test_package_pr
+    test_cleanup
     test_go_pipeline
     test_canvas_arch
     test_status

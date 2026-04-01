@@ -3,9 +3,11 @@
 # Usage: ./scripts/plan-init.sh <TASK-ID> [blueprint]
 set -euo pipefail
 
+PROJECT_ROOT="$(pwd)"
+AI_RUNS_DIR="${PROJECT_ROOT}/.ai/runs"
 TASK_ID="${1:?Usage: $0 <TASK-ID> [blueprint]}"
 BLUEPRINT="${2:-feature}"
-RUN_DIR=".ai/runs/$TASK_ID"
+RUN_DIR="${AI_RUNS_DIR}/${TASK_ID}"
 DATE=$(date +%Y-%m-%d)
 
 if [ -d "$RUN_DIR" ]; then

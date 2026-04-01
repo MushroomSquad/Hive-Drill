@@ -131,6 +131,14 @@ case "$PROJECT_TYPE" in
 esac
 echo "" | tee -a "$LOG_FILE"
 
+# ── Workspace cleanup contract ──────────────────────────────────────
+if [[ -d "_ai_tmp" ]]; then
+  fail "Transient workspace directory present: ./_ai_tmp (pipeline cleanup did not run)"
+else
+  pass "Transient workspace directory absent"
+fi
+echo "" | tee -a "$LOG_FILE"
+
 # ── Security sweep (only --full) ────────────────────────────────────
 if [[ "$MODE" == "--full" ]]; then
   echo "--- Security sweep ---" | tee -a "$LOG_FILE"

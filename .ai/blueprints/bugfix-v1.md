@@ -150,6 +150,19 @@ What to add to BASE.md / ai-check / tests to catch this class of bugs earlier?
 
 ---
 
+## Stage 7: Workspace cleanup
+
+**Owner:** scripts
+**Input:** current workspace root
+**Output:** clean workspace root
+
+Rules:
+- Generated documents must be written under `.ai/runs/<BUG-ID>/...` or `${AI_RUNS_DIR}/${BUG-ID}/...`
+- If a transient workspace file is needed, write it under `_ai_tmp/` (for example `_ai_tmp/PR_DESCRIPTION.md`)
+- Run `scripts/cleanup.sh` after PR packaging or any manual packaging step
+
+---
+
 ## Artifacts
 
 ```

@@ -18,6 +18,7 @@ Implement new functionality from brief to ready PR.
 | Verification | scripts | ai-check.sh |
 | Narrative review | Claude Code | sonnet |
 | PR packaging | Codex / Cursor | cloud-medium |
+| Workspace cleanup | scripts | cleanup.sh |
 | Retro | Human + agent | — |
 
 ---
@@ -262,7 +263,20 @@ APPROVED / NEEDS CHANGES / BLOCKED (reason)
 
 ---
 
-## Stage 7: Retro
+## Stage 7: Workspace cleanup
+
+**Owner:** scripts
+**Input:** current workspace root
+**Output:** clean workspace root
+
+Rules:
+- Any generated file write must target `.ai/runs/<TASK-ID>/...` or `${AI_RUNS_DIR}/${TASK_ID}/...`
+- If a transient workspace file is needed, write it under `_ai_tmp/` (for example `_ai_tmp/PR_DESCRIPTION.md`)
+- Run `scripts/cleanup.sh` after PR packaging to remove legacy root-level artifacts if they appear
+
+---
+
+## Stage 8: Retro
 
 **Owner:** Human + Claude Code
 **Task:** update system based on lessons
@@ -287,5 +301,5 @@ Checklist:
   verification.md ✅ Stage 4
   findings.md     ✅ Stage 5
   pr-body.md      ✅ Stage 6
-  retro.md        ✅ Stage 7 (optional)
+  retro.md        ✅ Stage 8 (optional)
 ```
